@@ -2,25 +2,19 @@ import { Text, View, Button } from "react-native";
 import { useRouter } from "expo-router";
 
 export default function Index() {
-  const router = useRouter();
+    const router = useRouter();
 
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>欢迎使用健康提醒管理系统</Text>
-      <Button
-        title="录入健康数据"
-        onPress={() => router.push({ pathname: "./dataInput"})}
-      />
-      <Button
-        title="查看健康数据图表"
-        onPress={() => router.push({ pathname: "./charts" })}
-      />
-    </View>
-  );
-}
+    return (
+        <View style={{ flex: 1 }}>
+            {/* 顶部占位部分，占总高度的三分之二 */}
+            <View style={{ flex: 2 }} />
+            {/* 按钮所在部分，占总高度的三分之一 */}
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <Button
+                    title="使用"
+                    onPress={() => router.push({ pathname: "./Health" })}
+                />
+            </View>
+        </View>
+    );
+}    
