@@ -1,47 +1,42 @@
-import React from 'react';
-import { BarChart } from 'react-native-chart-kit';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from "expo-router";
 import { Text, View, Button } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DrinkCountWeeklyChart = () => {
-  const data = {
-    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-    datasets: [
-      {
-        data: [3, 4, 2, 5, 6, 3, 4],
-      },
-    ],
-  };
-
-  const chartConfig = {
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
-  };
-
+const Dashboard = () => {
+  const [sleepTime, setSleepTime] = useState('');
+  const [drinkCount, setDrinkCount] = useState('');
+  const [exerciseType, setExerciseType] = useState('');
+  const [caloriesBurned, setCaloriesBurned] = useState('');
+  const [isExercise达标, setIsExercise达标] = useState('');
+  const [exerciseDays, setExerciseDays] = useState('');
   const router = useRouter();
-  // 这里的 push 调用可能是多余的，暂时保留注释
-  // router.push({ pathname: "/dataInput" });
-  // router.push({ pathname: "/charts" });
+
+  useEffect(() => {
+    // 从AsyncStorage读取数据
+    const loadData = async () => {
+      setSleepTime(await AsyncStorage.getItem('sleepTime') || '');
+      setDrinkCount(await AsyncStorage.getItem('drinkCount') || '');
+      setExerciseType(await AsyncStorage.getItem('exerciseType') || '');
+      setCaloriesBurned(await AsyncStorage.getItem('caloriesBurned') || '');
+      setIsExercise达标(await AsyncStorage.getItem('isExercise达标') || '');
+      setExerciseDays(await AsyncStorage.getItem('exerciseDays') || '');
+    };
+    loadData();
+  }, []);
 
   return (
     <View>
-      <BarChart
-        data={data}
-        width={300}
-        height={220}
-        chartConfig={chartConfig}
-        verticalLabelRotation={30}
-        yAxisLabel="次数"
-        yAxisSuffix=""
-      />
+      <Text>健康 - 饮水: 已有 {drinkCount} 次喝水</Text>
+      <Text>今日喝水次数 {drinkCount} 次</Text>
+      <Text>睡眠 - 昨晚睡了 {sleepTime} 小时</Text>
+      <Text>运动 - 类型: {exerciseType}</Text>
+      <Text>今日已消耗 {caloriesBurned} 千卡</Text>
+      <Text>今日运动 {isExercise达标}</Text>
+      <Text>已坚持运动 {exerciseDays} 天</Text>
       <Button title="返回首页" onPress={() => router.back()} />
     </View>
   );
 };
 
-export default DrinkCountWeeklyChart;
+export default Dashboard;
