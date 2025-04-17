@@ -7,24 +7,24 @@ export default function Health() {
     const router = useRouter();
     const [lastDrinkTime, setLastDrinkTime] = useState<number | null>(null);
     const [lastSleepTime, setLastSleepTime] = useState<number | null>(null);
-    const [drinkCount, setDrinkCount] = useState(0);
+    const [drinkAmount, setDrinkAmount] = useState(0);
     const [sleepHours, setSleepHours] = useState(0);
 
     useEffect(() => {
         const loadDrinkData = async () => {
             const lastDrink = await AsyncStorage.getItem('lastDrinkTime');
-            const drinkCountData = await AsyncStorage.getItem('drinkCount');
+            const drinkAmountData = await AsyncStorage.getItem('dailyDrinkAmount');
             if (lastDrink) {
                 setLastDrinkTime(parseFloat(lastDrink));
             }
-            if (drinkCountData) {
-                setDrinkCount(parseInt(drinkCountData));
+            if (drinkAmountData) {
+                setDrinkAmount(parseInt(drinkAmountData));
             }
         };
 
         const loadSleepData = async () => {
             const lastSleep = await AsyncStorage.getItem('lastSleepTime');
-            const sleepHoursData = await AsyncStorage.getItem('sleepHours');
+            const sleepHoursData = await AsyncStorage.getItem('lastSleepHours');
             if (lastSleep) {
                 setLastSleepTime(parseFloat(lastSleep));
             }
@@ -35,6 +35,20 @@ export default function Health() {
 
         loadDrinkData();
         loadSleepData();
+
+        // 每天0点清零数据
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+        const timeUntilMidnight = midnight.getTime() - now.getTime();
+
+        const timer = setTimeout(async () => {
+            await AsyncStorage.setItem('dailyDrinkAmount', '0');
+            await AsyncStorage.setItem('lastSleepHours', '0');
+            setDrinkAmount(0);
+            setSleepHours(0);
+        }, timeUntilMidnight);
+
+        return () => clearTimeout(timer);
     }, []);
 
     const getTimeSinceLastDrink = () => {
@@ -47,27 +61,35 @@ export default function Health() {
     };
 
     const getDrinkBarIndex = () => {
-        if (drinkCount < 2) return 0;
-        if (drinkCount < 4) return 1;
-        if (drinkCount < 6) return 2;
-        if (drinkCount < 8) return 3;
-        if (drinkCount < 10) return 4;
+        const ratio = drinkAmount / 1600;
+        if (ratio < 0.1) return 0;
+        if (ratio < 0.2) return 1;
+        if (ratio < 0.3) return 2;
+        if (ratio < 0.4) return 3;
+        if (ratio < 0.5) return 4;
+        if (ratio < 0.6) return 5;
+        if (ratio < 0.7) return 6;
+        if (ratio < 0.8) return 7;
+        if (ratio < 0.9) return 8;
         return 9;
     };
 
     const getSleepBarIndex = () => {
-        if (sleepHours < 4) return 0;
-        if (sleepHours < 5) return 1;
-        if (sleepHours < 6) return 2;
-        if (sleepHours < 7) return 3;
-        if (sleepHours < 8) return 4;
+        const ratio = sleepHours / 10;
+        if (ratio < 0.1) return 0;
+        if (ratio < 0.2) return 1;
+        if (ratio < 0.3) return 2;
+        if (ratio < 0.4) return 3;
+        if (ratio < 0.5) return 4;
+        if (ratio < 0.6) return 5;
+        if (ratio < 0.7) return 6;
+        if (ratio < 0.8) return 7;
+        if (ratio < 0.9) return 8;
         return 9;
     };
 
     return (
         <View style={styles.container}>
-            {/* 左上角的 Health 单词 */}
-            <Text style={styles.topLeftText}>Health</Text>
             {/* 饮水量模块 */}
             <TouchableOpacity
                 style={styles.module}
@@ -184,4 +206,4 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0
     }
-});    
+});

@@ -5,10 +5,12 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Image
+    Image,
+    Button
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 定义每个杯子大小对应的图片路径
 const cupImages: { [key: number]: any } = {
@@ -26,15 +28,17 @@ export default function Drink_DataInput() {
 
     const cupSizes = [50, 100, 150, 200, 300];
 
+    const handleConfirm = async () => {
+        const currentDrinkAmount = cupSize * drinkCount;
+        const storedDrinkAmount = await AsyncStorage.getItem('dailyDrinkAmount');
+        const newDrinkAmount = parseInt(storedDrinkAmount || '0') + currentDrinkAmount;
+        await AsyncStorage.setItem('dailyDrinkAmount', newDrinkAmount.toString());
+        await AsyncStorage.setItem('lastDrinkTime', Date.now().toString());
+        router.back();
+    };
+
     return (
         <View style={styles.container}>
-            {/* 左上角返回按钮 */}
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => router.back()}
-            >
-                <Text style={styles.backButtonText}>←</Text>
-            </TouchableOpacity>
             {/* 选择杯子大小部分 */}
             <View style={styles.section}>
                 <Text style={styles.label}>这次喝水使用多大的杯子呢</Text>
@@ -75,6 +79,7 @@ export default function Drink_DataInput() {
                     ))}
                 </Picker>
             </View>
+            <Button title="确认" onPress={handleConfirm} />
         </View>
     );
 }
@@ -83,14 +88,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16
-    },
-    backButton: {
-        position: 'absolute',
-        top: 16,
-        left: 16
-    },
-    backButtonText: {
-        fontSize: 24
     },
     section: {
         marginVertical: 16
@@ -121,4 +118,4 @@ const styles = StyleSheet.create({
     picker: {
         height: 150
     }
-});    
+});
