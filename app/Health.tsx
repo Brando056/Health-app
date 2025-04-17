@@ -95,7 +95,7 @@ export default function Health() {
                 style={styles.module}
                 onPress={() => router.push({ pathname: "./Drink_DataInput" })}
             >
-                <Text>已有 {getTimeSinceLastDrink()} 分钟未喝水</Text>
+                <Text>今日已饮水{drinkAmount}ml  已有 {getTimeSinceLastDrink()} 分钟未喝水</Text>
                 <View style={styles.barContainer}>
                     {Array.from({ length: 10 }).map((_, index) => (
                         <View
