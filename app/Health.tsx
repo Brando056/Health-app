@@ -14,11 +14,20 @@ export default function Health() {
         const loadDrinkData = async () => {
             const lastDrink = await AsyncStorage.getItem('lastDrinkTime');
             const drinkAmountData = await AsyncStorage.getItem('dailyDrinkAmount');
+            const lastResetDate = await AsyncStorage.getItem('lastResetDate');
+            const today = new Date().toDateString();
+
+            if (lastResetDate !== today) {
+                // 如果是新的一天，重置数据
+                await AsyncStorage.setItem('dailyDrinkAmount', '0');
+                await AsyncStorage.setItem('lastResetDate', today);
+                setDrinkAmount(0);
+            } else if (drinkAmountData) {
+                setDrinkAmount(parseInt(drinkAmountData));
+            }
+
             if (lastDrink) {
                 setLastDrinkTime(parseFloat(lastDrink));
-            }
-            if (drinkAmountData) {
-                setDrinkAmount(parseInt(drinkAmountData));
             }
         };
 
@@ -36,7 +45,7 @@ export default function Health() {
         loadDrinkData();
         loadSleepData();
 
-        // 每天0点清零数据
+        // 设置每日零点重置的定时器
         const now = new Date();
         const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
         const timeUntilMidnight = midnight.getTime() - now.getTime();
@@ -44,6 +53,7 @@ export default function Health() {
         const timer = setTimeout(async () => {
             await AsyncStorage.setItem('dailyDrinkAmount', '0');
             await AsyncStorage.setItem('lastSleepHours', '0');
+            await AsyncStorage.setItem('lastResetDate', new Date().toDateString());
             setDrinkAmount(0);
             setSleepHours(0);
         }, timeUntilMidnight);
@@ -206,4 +216,4 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0
     }
-});
+}); 

@@ -4296,6 +4296,11 @@ expo-linking@~7.0.5:
     expo-constants "~17.0.5"
     invariant "^2.2.4"
 
+expo-location@^18.0.10:
+  version "18.0.10"
+  resolved "https://registry.yarnpkg.com/expo-location/-/expo-location-18.0.10.tgz#330f35f5dba2d575bd0ffd3c65d5df9299a0bf47"
+  integrity sha512-R0Iioz0UZ9Ts8TACPngh8uDFbajJhVa5/igLqWB8Pq/gp8UHuwj7PC8XbZV7avsFoShYjaxrOhf4U7IONeKLgg==
+
 expo-module-scripts@^4.0.4:
   version "4.0.5"
   resolved "https://registry.npmjs.org/expo-module-scripts/-/expo-module-scripts-4.0.5.tgz"
@@ -4344,7 +4349,7 @@ expo-modules-core@2.2.3:
 
 expo-notifications@^0.29.14:
   version "0.29.14"
-  resolved "https://registry.npmjs.org/expo-notifications/-/expo-notifications-0.29.14.tgz"
+  resolved "https://registry.yarnpkg.com/expo-notifications/-/expo-notifications-0.29.14.tgz#77beb6bc74b1b1abfa3adcab77fb6c9ea5d7d1b0"
   integrity sha512-AVduNx9mKOgcAqBfrXS1OHC9VAQZrDQLbVbcorMjPDGXW7m0Q5Q+BG6FYM/saVviF2eO8fhQRsTT40yYv5/bhQ==
   dependencies:
     "@expo/image-utils" "^0.6.5"

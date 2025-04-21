@@ -16,7 +16,7 @@ const Dashboard = () => {
     // 从AsyncStorage读取数据
     const loadData = async () => {
       setSleepTime(await AsyncStorage.getItem('sleepTime') || '');
-      setDrinkCount(await AsyncStorage.getItem('drinkCount') || '');
+      setDrinkCount(await AsyncStorage.getItem('dailyDrinkAmount') || '');
       setExerciseType(await AsyncStorage.getItem('exerciseType') || '');
       setCaloriesBurned(await AsyncStorage.getItem('caloriesBurned') || '');
       setIsExercise达标(await AsyncStorage.getItem('isExercise达标') || '');
@@ -27,10 +27,10 @@ const Dashboard = () => {
 
   return (
     <View>
-      <Text>健康 - 饮水: 已有 {drinkCount} 次喝水</Text>
+      <Text>健康<br></br>饮水: 今日已喝水{drinkCount}ml</Text>
       <Text>今日喝水次数 {drinkCount} 次</Text>
-      <Text>睡眠 - 昨晚睡了 {sleepTime} 小时</Text>
-      <Text>运动 - 类型: {exerciseType}</Text>
+      <Text>睡眠<br></br>昨晚睡了 {sleepTime} 小时</Text>
+      <Text>运动<br></br>类型: {exerciseType}</Text>
       <Text>今日已消耗 {caloriesBurned} 千卡</Text>
       <Text>今日运动 {isExercise达标}</Text>
       <Text>已坚持运动 {exerciseDays} 天</Text>
