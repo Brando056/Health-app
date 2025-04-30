@@ -97,6 +97,10 @@ const Me = () => {
 
                 const data = await response.json();
                 if (data.message === '数据提交成功') {
+                    // 保存到 AsyncStorage
+                    await AsyncStorage.setItem('height', height);
+                    await AsyncStorage.setItem('weight', weight);
+                    
                     Alert.alert(
                         '成功',
                         '身高体重数据已成功保存',
