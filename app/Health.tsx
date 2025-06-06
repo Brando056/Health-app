@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle } from 'react-native-svg';
@@ -147,14 +147,16 @@ export default function Health() {
     };
 
     return (
-        <View style={styles.container}>
-            {/* 饮水量模块 */}
+        <ScrollView style={styles.container}>
+            {/* 饮水模块 */}
             <TouchableOpacity
                 style={styles.module}
                 onPress={() => router.push({ pathname: "./Drink_DataInput" })}
             >
                 <Text style={styles.moduleTitle}>饮水量</Text>
-                <Text style={styles.moduleContent}>今日已饮水{drinkAmount}ml  已有 {getTimeSinceLastDrink()} 分钟未喝水</Text>
+                <Text style={styles.moduleContent}>
+                    今日已饮水{drinkAmount}ml，已有 {getTimeSinceLastDrink()} 分钟未喝水
+                </Text>
                 <View style={styles.barContainer}>
                     {Array.from({ length: 10 }).map((_, index) => (
                         <View
@@ -169,7 +171,7 @@ export default function Health() {
                     <Text style={styles.barLabelRight}>优秀</Text>
                 </View>
             </TouchableOpacity>
-
+    
             {/* 睡眠模块 */}
             <TouchableOpacity
                 style={styles.module}
@@ -191,20 +193,13 @@ export default function Health() {
                     <Text style={styles.barLabelRight}>优秀</Text>
                 </View>
             </TouchableOpacity>
-
-            {/* 健康评分模块 */}
+    
+            {/* 健康评分 */}
             <View style={styles.module}>
                 <Text style={styles.moduleTitle}>健康评分</Text>
                 <View style={styles.healthScoreContainer}>
                     <Svg width={200} height={200}>
-                        <Circle
-                            cx={100}
-                            cy={100}
-                            r={90}
-                            stroke="#e0e0e0"
-                            strokeWidth={10}
-                            fill="none"
-                        />
+                        <Circle cx={100} cy={100} r={90} stroke="#e0e0e0" strokeWidth={10} fill="none" />
                         <Circle
                             cx={100}
                             cy={100}
@@ -223,54 +218,57 @@ export default function Health() {
                     </Text>
                 </View>
             </View>
-
-            {/* 清空数据按钮 */}
-            <TouchableOpacity
-                style={styles.clearButton}
-                onPress={clearData}
-            >
+    
+            {/* 清空数据 */}
+            <TouchableOpacity style={styles.clearButton} onPress={clearData}>
                 <Text style={styles.clearButtonText}>清空今日数据</Text>
             </TouchableOpacity>
-
-            {/* 底部导航按钮 */}
-            <View style={styles.bottomButtons}>
-                <Button
-                    title="Health"
-                    onPress={() => router.push({ pathname: "./Health" })}
-                />
-                <Button
-                    title="Sport"
-                    onPress={() => router.push({ pathname: "./Sport" })}
-                />
-                <Button
-                    title="Chart"
-                    onPress={() => router.push({ pathname: "./Chart" })}
-                />
-                <Button
-                    title="Me"
-                    onPress={() => router.push({ pathname: "./Me" })}
-                />
+    
+            {/* 导航按钮 */}
+            <View style={styles.buttonsContainer}>
+                <TouchableOpacity
+                style={[styles.navButton, styles.activeButton]}
+                onPress={() => router.push({ pathname: "./Health" })}
+                >
+                <Text style={styles.buttonText}>Health</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                style={styles.navButton}
+                onPress={() => router.push({ pathname: "./Sport" })}
+                >
+                <Text style={styles.buttonText}>Sport</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                style={[styles.navButton]}
+                onPress={() => router.push({ pathname: "./Chart" })}
+                >
+                <Text style={styles.buttonText}>Chart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                style={styles.navButton}
+                onPress={() => router.push({ pathname: "./Me" })}
+                >
+                <Text style={styles.buttonText}>Me</Text>
+                </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        padding: 20
     },
     module: {
         backgroundColor: '#f8f8f8',
         padding: 20,
-        borderRadius: 10,
-        marginBottom: 15,
-        borderWidth: 1,
-        borderColor: '#e0e0e0'
+        borderRadius: 16,
+        marginBottom: 30
     },
     moduleTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
         color: '#333'
@@ -284,11 +282,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 8
+        marginTop: 8,
+        position: 'relative'
     },
     barItem: {
         flex: 1,
         height: 20,
+        marginHorizontal: 1,
+        borderRadius: 4,
         borderWidth: 1,
         borderColor: '#ccc'
     },
@@ -298,12 +299,16 @@ const styles = StyleSheet.create({
     barLabelLeft: {
         position: 'absolute',
         left: 0,
-        bottom: -20
+        bottom: -20,
+        fontSize: 12,
+        color: '#666'
     },
     barLabelRight: {
         position: 'absolute',
         right: 0,
-        bottom: -20
+        bottom: -20,
+        fontSize: 12,
+        color: '#666'
     },
     healthScoreContainer: {
         alignItems: 'center',
@@ -314,14 +319,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         fontSize: 24,
         fontWeight: 'bold'
-    },
-    bottomButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        position: 'absolute',
-        bottom: 16,
-        left: 0,
-        right: 0
     },
     clearButton: {
         backgroundColor: '#f44336',
@@ -334,5 +331,25 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold'
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 15,
+        marginBottom: 20
+    },
+    navButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8
+    },
+    activeButton: {
+        backgroundColor: '#4CAF50'
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333'
     }
-}); 
+});

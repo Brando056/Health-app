@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Button, Alert } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Button, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Pedometer } from 'expo-sensors';
@@ -95,93 +95,103 @@ export default function Sport() {
     };
 
     return (
-        <View style={styles.container}>
-            {/* 步数显示模块 */}
-            <View style={styles.stepsModule}>
-                <Text style={styles.stepsTitle}>今日步数</Text>
-                <Text style={styles.stepsNumber}>{steps}</Text>
-            </View>
+        <ScrollView style={styles.container}>
+            <View style={styles.container}>
+                {/* 步数显示模块 */}
+                <View style={styles.stepsModule}>
+                    <Text style={styles.stepsTitle}>今日步数</Text>
+                    <Text style={styles.stepsNumber}>{steps}</Text>
+                </View>
 
-            {/* 运动模块 */}
-            <TouchableOpacity
-                style={styles.exerciseModule}
-                onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'running' } })}
-            >
-                <Text style={styles.exerciseTitle}>跑步</Text>
-                {(() => {
-                    const { totalDuration, totalCalories } = getTotalExerciseData('running');
-                    return (
-                        <Text style={styles.exerciseStats}>
-                            今日跑步总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
-                        </Text>
-                    );
-                })()}
-            </TouchableOpacity>
+                {/* 运动模块 */}
+                <TouchableOpacity
+                    style={styles.exerciseModule}
+                    onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'running' } })}
+                >
+                    <Text style={styles.exerciseTitle}>跑步</Text>
+                    {(() => {
+                        const { totalDuration, totalCalories } = getTotalExerciseData('running');
+                        return (
+                            <Text style={styles.exerciseStats}>
+                                今日跑步总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
+                            </Text>
+                        );
+                    })()}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.exerciseModule}
-                onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'walking' } })}
-            >
-                <Text style={styles.exerciseTitle}>徒步</Text>
-                {(() => {
-                    const { totalDuration, totalCalories } = getTotalExerciseData('walking');
-                    return (
-                        <Text style={styles.exerciseStats}>
-                            今日徒步总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
-                        </Text>
-                    );
-                })()}
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.exerciseModule}
+                    onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'walking' } })}
+                >
+                    <Text style={styles.exerciseTitle}>徒步</Text>
+                    {(() => {
+                        const { totalDuration, totalCalories } = getTotalExerciseData('walking');
+                        return (
+                            <Text style={styles.exerciseStats}>
+                                今日徒步总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
+                            </Text>
+                        );
+                    })()}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.exerciseModule}
-                onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'jumping' } })}
-            >
-                <Text style={styles.exerciseTitle}>跳绳</Text>
-                {(() => {
-                    const { totalDuration, totalCalories } = getTotalExerciseData('jumping');
-                    return (
-                        <Text style={styles.exerciseStats}>
-                            今日跳绳总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
-                        </Text>
-                    );
-                })()}
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.exerciseModule}
+                    onPress={() => router.push({ pathname: "./Exercise_Timer", params: { type: 'jumping' } })}
+                >
+                    <Text style={styles.exerciseTitle}>跳绳</Text>
+                    {(() => {
+                        const { totalDuration, totalCalories } = getTotalExerciseData('jumping');
+                        return (
+                            <Text style={styles.exerciseStats}>
+                                今日跳绳总计{totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
+                            </Text>
+                        );
+                    })()}
+                </TouchableOpacity>
 
-            {/* 今日总消耗 */}
-            <View style={styles.totalCaloriesModule}>
-                <Text style={styles.totalCaloriesTitle}>今日总消耗</Text>
-                <Text style={styles.totalCaloriesNumber}>{Math.round(getTotalCalories())} 千卡</Text>
-            </View>
+                {/* 今日总消耗 */}
+                <View style={styles.totalCaloriesModule}>
+                    <Text style={styles.totalCaloriesTitle}>今日总消耗</Text>
+                    <Text style={styles.totalCaloriesNumber}>{Math.round(getTotalCalories())} 千卡</Text>
+                </View>
 
-            {/* 清空数据按钮 */}
-            <TouchableOpacity
-                style={styles.clearButton}
-                onPress={clearData}
-            >
-                <Text style={styles.clearButtonText}>清空今日数据</Text>
-            </TouchableOpacity>
+                {/* 清空数据按钮 */}
+                <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={clearData}
+                >
+                    <Text style={styles.clearButtonText}>清空今日数据</Text>
+                </TouchableOpacity>
 
-            {/* 底部导航按钮 */}
-            <View style={styles.bottomButtons}>
-                <Button
-                    title="Health"
+                {/* 导航按钮 */}
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity
+                    style={[styles.navButton]}
                     onPress={() => router.push({ pathname: "./Health" })}
-                />
-                <Button
-                    title="Sport"
+                    >
+                    <Text style={styles.buttonText}>Health</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                    style={[styles.navButton, styles.activeButton]}
                     onPress={() => router.push({ pathname: "./Sport" })}
-                />
-                <Button
-                    title="Chart"
+                    >
+                    <Text style={styles.buttonText}>Sport</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                    style={[styles.navButton]}
                     onPress={() => router.push({ pathname: "./Chart" })}
-                />
-                <Button
-                    title="Me"
+                    >
+                    <Text style={styles.buttonText}>Chart</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                    style={styles.navButton}
                     onPress={() => router.push({ pathname: "./Me" })}
-                />
+                    >
+                    <Text style={styles.buttonText}>Me</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -264,5 +274,25 @@ const styles = StyleSheet.create({
         bottom: 16,
         left: 0,
         right: 0
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 15,
+        marginBottom: 20
+    },
+    navButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 8
+    },
+    activeButton: {
+        backgroundColor: '#4CAF50'
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333'
     }
 });
