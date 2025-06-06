@@ -9,8 +9,7 @@ import {
     TextInput,
     Alert,
     ActivityIndicator,
-    ToastAndroid,
-    Platform
+
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -58,11 +57,7 @@ export default function DrinkDataInput() {
 
     // 显示提示消息
     const showToast = (message: string) => {
-        if (Platform.OS === 'android') {
-            ToastAndroid.show(message, ToastAndroid.SHORT);
-        } else {
-            Alert.alert('提示', message);
-        }
+        Alert.alert('提示', message); // 移除 Platform 判断，统一使用 Alert
     };
 
     const handleSubmit = async () => {

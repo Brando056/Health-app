@@ -453,22 +453,6 @@ const Me = () => {
         )}
       </View>
 
-      {/* 底部导航栏 */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Health" })}>
-          <Text style={styles.navText}>Health</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Sport" })}>
-          <Text style={styles.navText}>Sport</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Chart" })}>
-          <Text style={styles.navText}>Chart</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.navButton, styles.activeButton]} onPress={() => router.push({ pathname: "./Me" })}>
-          <Text style={styles.navText}>Me</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* 打卡环形 */}
       <View style={styles.checkInContainer}>
         <Svg width={CIRCLE_RADIUS * 2 + 20} height={CIRCLE_RADIUS * 2 + 20}>
@@ -498,6 +482,21 @@ const Me = () => {
           <Text style={styles.checkInText}>
             {isCheckedIn ? `已打卡\n时间: ${checkInTime}\n已打卡 ${checkInDays} 天` : '点击打卡'}
           </Text>
+        </TouchableOpacity>
+      </View>
+      {/* 底部导航栏 */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Health" })}>
+          <Text style={styles.navText}>Health</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Sport" })}>
+          <Text style={styles.navText}>Sport</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push({ pathname: "./Chart" })}>
+          <Text style={styles.navText}>Chart</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navButton, styles.activeButton]} onPress={() => router.push({ pathname: "./Me" })}>
+          <Text style={styles.navText}>Me</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
