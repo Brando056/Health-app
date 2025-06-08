@@ -1,9 +1,9 @@
 name: EAS Build
 
 on:
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
   push:
-    branches: [ main ] # 或你自己的分支
+    branches: [ main ]
 
 jobs:
   build-android:
@@ -20,9 +20,6 @@ jobs:
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
-
-      - name: Login to Expo
-        run: eas login --token ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
         run: npm install
