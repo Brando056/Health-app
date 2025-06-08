@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "yourapp",
     "name": "health-app",
     "slug": "health-app",
     "version": "1.0.0",
@@ -11,6 +12,22 @@
     },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2f815f74-0fae-4344-a7c0-d87e5e6a3c16"
+      }
+    },
+    "developmentClient": {},
+    "android": {
+      "permissions": [
+        "ACTIVITY_RECOGNITION"
+      ],
+      "package": "com.brandoqianmo.healthapp_a"
+      },
+    "owner": "brandoqianmo",
+    "plugins": [
+      "expo-activity-recognition"
+    ]
   }
 }

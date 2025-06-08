@@ -146,6 +146,23 @@ export default function Health() {
         calculateHealthScore();
     };
 
+    const renderNavigation = () => (
+        <View style={styles.navigationContainer}>
+          {['Health', 'Sport', 'Chart', 'Me'].map((page) => (
+            <TouchableOpacity
+              key={page}
+              style={[
+                styles.navButton, 
+                page === 'Health' && styles.activeButton
+              ]}
+              onPress={() => router.push(`./${page}`)}
+            >
+              <Text style={styles.buttonText}>{page}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+
     return (
         <ScrollView style={styles.container}>
             {/* 饮水模块 */}
@@ -224,33 +241,8 @@ export default function Health() {
                 <Text style={styles.clearButtonText}>清空今日数据</Text>
             </TouchableOpacity>
     
-            {/* 导航按钮 */}
-            <View style={styles.buttonsContainer}>
-                <TouchableOpacity
-                style={[styles.navButton, styles.activeButton]}
-                onPress={() => router.push({ pathname: "./Health" })}
-                >
-                <Text style={styles.buttonText}>Health</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push({ pathname: "./Sport" })}
-                >
-                <Text style={styles.buttonText}>Sport</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                style={[styles.navButton]}
-                onPress={() => router.push({ pathname: "./Chart" })}
-                >
-                <Text style={styles.buttonText}>Chart</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push({ pathname: "./Me" })}
-                >
-                <Text style={styles.buttonText}>Me</Text>
-                </TouchableOpacity>
-            </View>
+            {/* 底部导航 */}
+            {renderNavigation()}
         </ScrollView>
     );
 }
@@ -332,24 +324,28 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold'
     },
-    buttonsContainer: {
+    navigationContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 15,
-        marginBottom: 20
-    },
-    navButton: {
+        justifyContent: 'space-between',
+        backgroundColor: 'white',
+        borderTopWidth: 1,
+        borderTopColor: '#EEE',
         paddingVertical: 10,
         paddingHorizontal: 15,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 8
-    },
-    activeButton: {
-        backgroundColor: '#4CAF50'
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333'
-    }
+    
+      },
+      navButton: {
+        padding: 10,
+        borderRadius: 8,
+        flex: 1,
+        marginHorizontal: 5,
+        alignItems: 'center',
+      },
+      activeButton: {
+        backgroundColor: '#4ECDC4',
+      },
+      buttonText: {
+        fontSize: 14,
+        fontWeight: '500',
+      },
 });
