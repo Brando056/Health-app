@@ -15,7 +15,7 @@
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.0.18",
     "@react-navigation/stack": "7.2.2",
-    "expo": "53.0.10",
+    "expo": "53.0.11",
     "expo-activity-recognition": "^0.2.0",
     "expo-blur": "~14.1.5",
     "expo-build-properties": "^0.14.6",
@@ -28,7 +28,7 @@
     "expo-module-scripts": "^4.1.7",
     "expo-notifications": "~0.31.3",
     "expo-router": "~5.0.7",
-    "expo-sensors": "^13.0.9",
+    "expo-sensors": "~14.1.4",
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.5",
@@ -51,5 +51,13 @@
     "@types/react": "~19.0.10",
     "jest-expo": "~53.0.7",
     "typescript": "~5.8.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": ["react-native-chart-kit", "react-native-sensors"],
+        "listUnknownPackages": false
+      }
+    }
   }
 }
