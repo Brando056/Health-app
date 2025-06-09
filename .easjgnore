@@ -1,0 +1,37 @@
+# 依赖
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# 调试日志
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# 本地环境变量文件
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# 示例应用
+app-example
