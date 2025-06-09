@@ -8,12 +8,15 @@ export default function Index() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>欢迎使用健康助手</Text>
+        {/* Welcome title */}
+        <Text style={styles.title}>Welcome to Health Assistant</Text>
+        
+        {/* Get Started button */}
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => router.push({ pathname: './Health' })}
         >
-          <Text style={styles.buttonText}>开始使用</Text>
+          <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
   startButton: {
     paddingVertical: 12,
     paddingHorizontal: 30,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4CAF50', // Green color for action button
     borderRadius: 10
   },
   buttonText: {

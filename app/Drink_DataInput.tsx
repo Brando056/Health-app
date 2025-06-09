@@ -9,12 +9,11 @@ import {
     TextInput,
     Alert,
     ActivityIndicator,
-
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 定义每个杯子大小对应的图片路径
+// Define image paths for each cup size
 const cupImages: { [key: number]: any } = {
     50: require('../assets/images/cup_50ml.png'),
     100: require('../assets/images/cup_100ml.png'),
@@ -23,12 +22,12 @@ const cupImages: { [key: number]: any } = {
     300: require('../assets/images/cup_300ml.png')
 };
 
-// 常见容器参考
+// Common container references
 const containerReferences = [
-    { name: '小茶杯', volume: 150, image: require('../assets/images/cup_150ml.png') },
-    { name: '普通水杯', volume: 250, image: require('../assets/images/cup_200ml.png') },
-    { name: '矿泉水瓶', volume: 500, image: require('../assets/images/cup_500ml.png') },
-    { name: '运动水壶', volume: 750, image: require('../assets/images/cup_750ml.png') }
+    { name: 'Small Teacup', volume: 150, image: require('../assets/images/cup_150ml.png') },
+    { name: 'Regular Cup', volume: 250, image: require('../assets/images/cup_200ml.png') },
+    { name: 'Large Bottle', volume: 500, image: require('../assets/images/cup_500ml.png') },
+    { name: 'Sports Bottle', volume: 750, image: require('../assets/images/cup_750ml.png') }
 ];
 
 export default function DrinkDataInput() {
@@ -39,7 +38,7 @@ export default function DrinkDataInput() {
     const [todayTotal, setTodayTotal] = useState('0');
     const [isClearing, setIsClearing] = useState(false);
 
-    // 加载当前饮水总量
+    // Load today's total drinking amount
     useEffect(() => {
         loadTodayDrinkAmount();
     }, []);
@@ -50,109 +49,97 @@ export default function DrinkDataInput() {
             const amount = await AsyncStorage.getItem('dailyDrinkAmount') || '0';
             setTodayTotal(amount);
         } catch (error) {
-            console.error('加载饮水数据失败:', error);
-            showToast('加载数据失败');
+            console.error('Failed to load drinking data:', error);
+            showToast('Failed to load data');
         }
     };
 
-    // 显示提示消息
+    // Show alert message
     const showToast = (message: string) => {
-        Alert.alert('提示', message); // 移除 Platform 判断，统一使用 Alert
+        Alert.alert('Notice', message);
     };
 
     const handleSubmit = async () => {
         if (!drinkAmount || isNaN(parseInt(drinkAmount))) {
-            Alert.alert('提示', '请输入有效的饮水量');
+            Alert.alert('Notice', 'Please enter a valid drinking amount');
             return;
         }
 
         try {
-            setIsSubmitting(true); // 开始提交，显示加载状态
+            setIsSubmitting(true); // Start submitting, show loading indicator
             const amount = parseInt(drinkAmount);
             const now = new Date();
             const today = now.toDateString();
-            
-            // 保存上次饮水时间
+
+            // Save last drinking time
             await AsyncStorage.setItem('lastDrinkTime', now.getTime().toString());
-            
-            // 获取并更新今日饮水总量
+
+            // Get and update today's drinking total
             const currentAmount = await AsyncStorage.getItem('dailyDrinkAmount') || '0';
             const newAmount = (parseInt(currentAmount) + amount).toString();
             await AsyncStorage.setItem('dailyDrinkAmount', newAmount);
-            
-            // 保存带日期的饮水数据用于图表显示
+
+            // Save dated drinking data for chart display
             await AsyncStorage.setItem(`dailyDrinkAmount_${today}`, newAmount);
-            
-            // 提交完成，重置加载状态
-            setIsSubmitting(false);
-            
-            // 提示保存成功
+
+            setIsSubmitting(false); // Reset loading state
+
             Alert.alert(
-                '保存成功',
-                `已记录 ${amount}ml 饮水量\n今日总饮水量: ${newAmount}ml`,
-                [{ text: '确定', onPress: () => router.back() }]
+                'Saved Successfully',
+                `Recorded ${amount}ml of water\nToday's total: ${newAmount}ml`,
+                [{ text: 'OK', onPress: () => router.back() }]
             );
         } catch (error) {
-            console.error('保存饮水数据失败:', error);
-            Alert.alert('提示', '保存失败，请重试');
-            setIsSubmitting(false); // 提交失败，重置状态
+            console.error('Failed to save drinking data:', error);
+            Alert.alert('Notice', 'Save failed, please try again');
+            setIsSubmitting(false);
         }
     };
 
     const handleClearData = () => {
         if (todayTotal === '0') {
-            showToast('今日暂无饮水数据');
+            showToast('No drinking data for today');
             return;
         }
 
         Alert.alert(
-            '确认清除',
-            '确定要清除今日所有饮水记录吗？此操作不可恢复。',
+            'Confirm Deletion',
+            'Are you sure you want to clear today\'s drinking records? This action is irreversible.',
             [
-                { text: '取消', style: 'cancel' },
-                { 
-                    text: '确认清除', 
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Confirm',
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            setIsClearing(true); // 设置清除状态
-                            
+                            setIsClearing(true);
                             const today = new Date().toDateString();
-                            
-                            // 清除今日饮水量
                             await AsyncStorage.setItem('dailyDrinkAmount', '0');
                             await AsyncStorage.setItem(`dailyDrinkAmount_${today}`, '0');
-                            
-                            // 重置当前页面状态
                             setDrinkAmount('');
                             setSelectedContainer(null);
                             setTodayTotal('0');
-                            
-                            // 清除完成
                             setIsClearing(false);
-                            showToast('今日饮水记录已清除');
+                            showToast('Today\'s drinking records have been cleared');
                         } catch (error) {
-                            console.error('清除数据失败:', error);
-                            Alert.alert('提示', '清除失败，请重试');
+                            console.error('Failed to clear data:', error);
+                            Alert.alert('Notice', 'Clear failed, please try again');
                             setIsClearing(false);
                         }
-                    } 
+                    }
                 }
             ]
         );
     };
 
     const handleNavigateBack = () => {
-        // 直接使用navigation API确保返回操作执行
         try {
             router.back();
-            // 如果router.back()不起作用，可以尝试以下替代方法
             setTimeout(() => {
                 router.push('./Health');
             }, 100);
         } catch (error) {
-            console.error('导航返回失败:', error);
-            // 尝试备用导航方法
+            console.error('Navigation failed:', error);
             router.push('./Health');
         }
     };
@@ -164,22 +151,22 @@ export default function DrinkDataInput() {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>记录饮水量</Text>
-            
-            {/* 显示今日饮水总量 */}
+            <Text style={styles.title}>Log Water Intake</Text>
+
+            {/* Display today's total water intake */}
             <View style={styles.todayTotalContainer}>
-                <Text style={styles.todayTotalLabel}>今日已饮水</Text>
+                <Text style={styles.todayTotalLabel}>Water consumed today</Text>
                 <Text style={styles.todayTotalValue}>{todayTotal} ml</Text>
             </View>
-            
-            {/* 常见容器选择 */}
+
+            {/* Container selection */}
             <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>选择容器</Text>
-                <Text style={styles.sectionDescription}>选择你使用的容器，快速记录饮水量</Text>
+                <Text style={styles.sectionTitle}>Choose Container</Text>
+                <Text style={styles.sectionDescription}>Select the container you used to quickly log the intake</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.containerScroll}>
                     {containerReferences.map((container, index) => (
-                        <TouchableOpacity 
-                            key={index} 
+                        <TouchableOpacity
+                            key={index}
                             style={[
                                 styles.containerItem,
                                 selectedContainer === container.volume && styles.selectedContainerItem
@@ -193,59 +180,59 @@ export default function DrinkDataInput() {
                     ))}
                 </ScrollView>
             </View>
-            
-            {/* 自定义输入 */}
+
+            {/* Custom input */}
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>自定义饮水量 (ml)</Text>
+                <Text style={styles.label}>Custom Amount (ml)</Text>
                 <View style={styles.inputRow}>
                     <TextInput
                         style={styles.input}
                         value={drinkAmount}
                         onChangeText={setDrinkAmount}
-                        placeholder="输入饮水量"
+                        placeholder="Enter amount"
                         keyboardType="numeric"
                     />
                     <Text style={styles.unitText}>ml</Text>
                 </View>
             </View>
-            
-            {/* 常用饮水量快速选择 */}
+
+            {/* Quick selection */}
             <View style={styles.presetContainer}>
-                <Text style={styles.sectionTitle}>快速选择</Text>
+                <Text style={styles.sectionTitle}>Quick Select</Text>
                 <View style={styles.presetButtons}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.presetButton}
                         onPress={() => setDrinkAmount('200')}
                     >
                         <Text style={styles.presetButtonText}>200ml</Text>
-                        <Text style={styles.presetDescription}>小杯水</Text>
+                        <Text style={styles.presetDescription}>Small glass</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.presetButton}
                         onPress={() => setDrinkAmount('350')}
                     >
                         <Text style={styles.presetButtonText}>350ml</Text>
-                        <Text style={styles.presetDescription}>中杯水</Text>
+                        <Text style={styles.presetDescription}>Medium glass</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.presetButton}
                         onPress={() => setDrinkAmount('500')}
                     >
                         <Text style={styles.presetButtonText}>500ml</Text>
-                        <Text style={styles.presetDescription}>矿泉水</Text>
+                        <Text style={styles.presetDescription}>Bottle water</Text>
                     </TouchableOpacity>
                 </View>
             </View>
-            
-            {/* 参考信息 */}
+
+            {/* Reference info */}
             <View style={styles.referenceContainer}>
-                <Text style={styles.referenceTitle}>饮水量参考</Text>
-                <Text style={styles.referenceText}>• 成人每日建议饮水量：1500-2000ml</Text>
-                <Text style={styles.referenceText}>• 一般矿泉水瓶：500-550ml</Text>
-                <Text style={styles.referenceText}>• 普通马克杯：250-300ml</Text>
-                <Text style={styles.referenceText}>• 小茶杯：150-200ml</Text>
+                <Text style={styles.referenceTitle}>Reference</Text>
+                <Text style={styles.referenceText}>• Recommended daily intake for adults: 1500-2000ml</Text>
+                <Text style={styles.referenceText}>• Typical bottled water: 500-550ml</Text>
+                <Text style={styles.referenceText}>• Regular mug: 250-300ml</Text>
+                <Text style={styles.referenceText}>• Small teacup: 150-200ml</Text>
             </View>
-            
+
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={[
@@ -259,17 +246,17 @@ export default function DrinkDataInput() {
                     {isSubmitting ? (
                         <ActivityIndicator color="#fff" size="small" />
                     ) : (
-                        <Text style={styles.submitButtonText}>提交</Text>
+                        <Text style={styles.submitButtonText}>Submit</Text>
                     )}
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                     style={styles.cancelButton}
                     onPress={handleNavigateBack}
                     disabled={isSubmitting || isClearing}
                     activeOpacity={0.7}
                 >
-                    <Text style={styles.cancelButtonText}>返回</Text>
+                    <Text style={styles.cancelButtonText}>Back</Text>
                 </TouchableOpacity>
             </View>
         </ScrollView>

@@ -1,3 +1,4 @@
+// Sleep Data Input Page
 import React, { useState } from 'react';
 import {
     Text,
@@ -16,16 +17,16 @@ export default function SleepDataInput() {
     const [sleepHours, setSleepHours] = useState('');
 
     const sleepTips = [
-        "尽量在晚上11点前入睡，以保证充足的深度睡眠。",
-        "睡前避免使用电子设备，因为屏幕发出的蓝光会抑制褪黑素的分泌。",
-        "睡前可以泡个热水澡或喝一杯温牛奶，有助于放松身心。",
-        "保持卧室安静、黑暗和凉爽的环境，有利于提高睡眠质量。",
-        "最好一次睡眠时长在7 - 9小时，以满足身体的恢复需求。"
+        "Try to fall asleep before 11 p.m. to ensure deep sleep.",
+        "Avoid using electronic devices before bed, as blue light suppresses melatonin.",
+        "Taking a warm bath or drinking warm milk before bed helps you relax.",
+        "Keep the bedroom quiet, dark, and cool to improve sleep quality.",
+        "Aim for 7–9 hours of continuous sleep to allow body recovery."
     ];
 
     const handleSubmit = async () => {
         if (!sleepHours || isNaN(parseFloat(sleepHours))) {
-            alert('请输入有效的睡眠时间');
+            alert('Please enter a valid sleep duration.');
             return;
         }
 
@@ -37,55 +38,55 @@ export default function SleepDataInput() {
             yesterday.setDate(now.getDate() - 1);
             const yesterdayStr = yesterday.toDateString();
             
-            // 保存睡眠时间
+            // Save sleep time
             await AsyncStorage.setItem('lastSleepTime', now.getTime().toString());
             await AsyncStorage.setItem('lastSleepHours', hours.toString());
             
-            // 保存带日期的睡眠数据用于图表显示 - 记录为昨天的睡眠
+            // Save sleep data with date for chart display – recorded as yesterday's sleep
             await AsyncStorage.setItem(`sleepHours_${yesterdayStr}`, hours.toString());
             
             router.back();
         } catch (error) {
-            console.error('保存睡眠数据失败:', error);
-            alert('保存失败，请重试');
+            console.error('Failed to save sleep data:', error);
+            alert('Save failed. Please try again.');
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>记录睡眠时间</Text>
+            <Text style={styles.title}>Record Sleep Duration</Text>
             
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>昨晚睡了多久 (小时):</Text>
+                <Text style={styles.label}>How long did you sleep last night (hours):</Text>
                 <TextInput
                     style={styles.input}
                     value={sleepHours}
                     onChangeText={setSleepHours}
-                    placeholder="例如: 7.5"
+                    placeholder="e.g. 7.5"
                     keyboardType="numeric"
                 />
             </View>
             
             <View style={styles.presetContainer}>
-                <Text style={styles.presetLabel}>快速选择:</Text>
+                <Text style={styles.presetLabel}>Quick Select:</Text>
                 <View style={styles.presetButtons}>
                     <TouchableOpacity 
                         style={styles.presetButton}
                         onPress={() => setSleepHours('6')}
                     >
-                        <Text style={styles.presetButtonText}>6小时</Text>
+                        <Text style={styles.presetButtonText}>6 hours</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.presetButton}
                         onPress={() => setSleepHours('7')}
                     >
-                        <Text style={styles.presetButtonText}>7小时</Text>
+                        <Text style={styles.presetButtonText}>7 hours</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.presetButton}
                         onPress={() => setSleepHours('8')}
                     >
-                        <Text style={styles.presetButtonText}>8小时</Text>
+                        <Text style={styles.presetButtonText}>8 hours</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -94,19 +95,19 @@ export default function SleepDataInput() {
                 style={styles.submitButton}
                 onPress={handleSubmit}
             >
-                <Text style={styles.submitButtonText}>提交</Text>
+                <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => router.back()}
             >
-                <Text style={styles.cancelButtonText}>取消</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             
-            {/* 睡眠小提示部分 */}
+            {/* Sleep tips section */}
             <View style={styles.tipsSection}>
-                <Text style={styles.tipsTitle}>💤 睡眠小贴士</Text>
+                <Text style={styles.tipsTitle}>💤 Sleep Tips</Text>
                 {sleepTips.map((tip, index) => (
                     <Text key={index} style={styles.tipText}>
                         {index + 1}. {tip}

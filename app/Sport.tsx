@@ -25,11 +25,11 @@ interface ExerciseData {
   timestamp: number;
 }
 
-// 定义运动类型及其图标
+// Define exercise types and their icons
 const EXERCISE_TYPES = [
-  { key: 'running', name: '跑步', icon: 'directions-run' as const, color: '#FF6B6B' },
-  { key: 'walking', name: '徒步', icon: 'directions-walk' as const, color: '#4ECDC4' },
-  { key: 'jumping', name: '跳绳', icon: 'fitness-center' as const, color: '#FFD166' }
+  { key: 'running', name: 'Running', icon: 'directions-run' as const, color: '#FF6B6B' },
+  { key: 'walking', name: 'Walking', icon: 'directions-walk' as const, color: '#4ECDC4' },
+  { key: 'jumping', name: 'Jump Rope', icon: 'fitness-center' as const, color: '#FFD166' }
 ];
 
 export default function Sport() {
@@ -46,56 +46,57 @@ export default function Sport() {
   const stepSubscriptionRef = useRef<Pedometer.Subscription | null>(null);
   const appStateRef = useRef(AppState.currentState);
 
+  // Generate key for today's date
   const getTodayKey = useCallback(() => {
     const today = new Date();
     return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
   }, []);
 
-  // 修复后的权限请求函数
+  // Request pedometer permission
   const requestPedometerPermission = useCallback(async () => {
     try {
-      // 检查基础计步权限
       const { status } = await Pedometer.requestPermissionsAsync();
       
       if (status !== 'granted') {
         setPermissionDenied(true);
-        setPermissionError('需要计步权限才能跟踪您的步数，请前往设置开启权限');
+        setPermissionError('Step tracking requires permission, please enable in settings');
         return false;
       }
       
-      
-      
       return true;
     } catch (error) {
-      console.error('请求计步权限失败:', error);
+      console.error('Pedometer permission request failed:', error);
       setPermissionDenied(true);
-      setPermissionError('请求权限时发生错误');
+      setPermissionError('Error requesting permission');
       return false;
     }
   }, []);
 
+  // Check if pedometer is available
   const checkPedometerAvailability = useCallback(async () => {
     try {
       const isAvailable = await Pedometer.isAvailableAsync();
       setIsPedometerAvailable(isAvailable);
       
       if (!isAvailable) {
-        console.log('设备不支持计步功能');
-        setPermissionError('您的设备不支持计步功能');
+        console.log('Device does not support pedometer');
+        setPermissionError('Your device does not support step counting');
       }
       return isAvailable;
     } catch (error) {
-      console.error('检查计步器失败:', error);
+      console.error('Pedometer check failed:', error);
       setIsPedometerAvailable(false);
-      setPermissionError('检查计步功能时发生错误');
+      setPermissionError('Error checking pedometer capability');
       return false;
     }
   }, []);
 
+  // Get step count data
   const getStepsData = useCallback(async () => {
     try {
       const todayKey = getTodayKey();
       
+      // Load saved steps
       const savedSteps = await AsyncStorage.getItem(`steps_${todayKey}`);
       if (savedSteps) {
         setSteps(parseInt(savedSteps));
@@ -110,27 +111,29 @@ export default function Sport() {
             setSteps(steps);
             await AsyncStorage.setItem(`steps_${todayKey}`, steps.toString());
           } else {
+            // Remove existing subscription if any
             if (stepSubscriptionRef.current) {
               stepSubscriptionRef.current.remove();
             }
             
+            // Watch for step count updates on Android
             stepSubscriptionRef.current = Pedometer.watchStepCount(result => {
-              console.log('Android 步数更新:', result.steps);
               setSteps(result.steps);
               AsyncStorage.setItem(`steps_${todayKey}`, result.steps.toString());
             });
           }
         } catch (error) {
-          console.error('获取步数失败:', error);
-          setPermissionError('获取步数失败，请检查权限设置');
+          console.error('Step count fetch failed:', error);
+          setPermissionError('Failed to get steps, check permissions');
         }
       }
     } catch (error) {
-      console.error('获取步数数据失败:', error);
-      setPermissionError('获取步数数据时发生错误');
+      console.error('Error getting step data:', error);
+      setPermissionError('Error loading step data');
     }
   }, [isPedometerAvailable, permissionDenied, getTodayKey]);
 
+  // Load user data from storage
   const loadData = useCallback(async () => {
     try {
       const [weightData, exerciseDataStr] = await Promise.all([
@@ -141,16 +144,18 @@ export default function Sport() {
       if (weightData) setWeight(parseFloat(weightData));
       if (exerciseDataStr) {
         const data = JSON.parse(exerciseDataStr);
+        // Sort by most recent first
         setExerciseData(data.sort((a: ExerciseData, b: ExerciseData) => b.timestamp - a.timestamp));
       }
 
       await getStepsData();
     } catch (error) {
-      console.error('加载数据失败:', error);
-      setPermissionError('加载数据时发生错误');
+      console.error('Data load failed:', error);
+      setPermissionError('Error loading data');
     }
   }, [getStepsData, getTodayKey]);
 
+  // Initialize component
   const initialize = useCallback(async () => {
     if (isInitializedRef.current) return;
     isInitializedRef.current = true;
@@ -159,8 +164,6 @@ export default function Sport() {
     setPermissionError('');
     
     try {
-      console.log('开始初始化...');
-      
       const isAvailable = await checkPedometerAvailability();
       
       if (isAvailable) {
@@ -168,34 +171,30 @@ export default function Sport() {
       }
       
       await loadData();
-      
-      console.log('初始化完成');
     } catch (error) {
-      console.error('初始化失败:', error);
-      setPermissionError('初始化运动功能时发生错误');
+      console.error('Initialization failed:', error);
+      setPermissionError('Error initializing sports features');
     } finally {
       setIsLoading(false);
     }
   }, [requestPedometerPermission, checkPedometerAvailability, loadData]);
 
+  // Setup app state listener
   useEffect(() => {
-    console.log('组件挂载');
-    
     initialize();
     
+    // Handle app coming back from background
     const appStateChangeHandler = (nextAppState: AppStateStatus) => {
-      console.log('应用状态变化:', nextAppState);
       if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('应用从后台恢复，刷新步数');
-        loadData();
+        loadData(); // Refresh data when app becomes active
       }
       appStateRef.current = nextAppState;
     };
     
     const subscription = AppState.addEventListener('change', appStateChangeHandler);
 
+    // Clean up on unmount
     return () => {
-      console.log('组件卸载');
       subscription.remove();
       
       if (stepSubscriptionRef.current) {
@@ -205,12 +204,14 @@ export default function Sport() {
     };
   }, [initialize, loadData]);
 
+  // Open settings app
   const openAppSettings = useCallback(() => {
     Linking.openSettings().catch(() => {
-      Alert.alert('无法打开设置', '请手动前往系统设置开启权限');
+      Alert.alert('Cannot open settings', 'Please go to system settings manually');
     });
   }, []);
 
+  // Calculate calories burned
   const calculateCalories = useCallback((type: string, duration: number) => {
     const baseCalories = {
       running: 8,
@@ -221,10 +222,12 @@ export default function Sport() {
     return baseCalories * (duration / 60) * weight * 1.05;
   }, [weight]);
 
+  // Filter exercise data by type
   const getExerciseDataByType = useCallback((type: string) => {
     return exerciseData.filter(data => data.type === type);
   }, [exerciseData]);
 
+  // Calculate totals for an exercise type
   const getTotalExerciseData = useCallback((type: string) => {
     const filteredData = getExerciseDataByType(type);
     const totalDuration = filteredData.reduce((sum, data) => sum + data.duration, 0);
@@ -232,18 +235,20 @@ export default function Sport() {
     return { totalDuration, totalCalories };
   }, [getExerciseDataByType]);
 
+  // Calculate total calories burned today
   const getTotalCalories = useCallback(() => {
     return exerciseData.reduce((sum, data) => sum + data.calories, 0);
   }, [exerciseData]);
 
+  // Clear today's exercise data with confirmation
   const clearData = useCallback(async () => {
     Alert.alert(
-      '确认',
-      '确定要清空今日的所有运动数据吗？',
+      'Confirm',
+      'Are you sure you want to clear all exercise data for today?',
       [
-        { text: '取消', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         { 
-          text: '清空', 
+          text: 'Clear', 
           onPress: async () => {
             const todayKey = getTodayKey();
             await AsyncStorage.setItem(`exercise_${todayKey}`, '[]');
@@ -254,6 +259,7 @@ export default function Sport() {
     );
   }, [getTodayKey]);
 
+  // Navigate to exercise timer screen
   const navigateToExerciseTimer = (type: string) => {
     router.push({ 
       pathname: "./Exercise_Timer", 
@@ -261,6 +267,7 @@ export default function Sport() {
     });
   };
 
+  // Render an exercise module
   const renderExerciseModule = (type: string) => {
     const exerciseType = EXERCISE_TYPES.find(t => t.key === type);
     
@@ -282,7 +289,7 @@ export default function Sport() {
         </View>
         
         <Text style={styles.exerciseStats}>
-          今日总计: {totalDuration}分钟，消耗{Math.round(totalCalories)}千卡
+          Today: {totalDuration} mins, {Math.round(totalCalories)} kcal burned
         </Text>
         
         {records.length > 0 && (
@@ -290,11 +297,11 @@ export default function Sport() {
             {records.slice(0, 3).map((record, index) => (
               <Text key={index} style={styles.recordItem}>
                 {new Date(record.timestamp).toLocaleTimeString()} - 
-                {record.duration}分钟 ({Math.round(record.calories)}千卡)
+                {record.duration} mins ({Math.round(record.calories)} kcal)
               </Text>
             ))}
             {records.length > 3 && (
-              <Text style={styles.moreRecords}>+ {records.length - 3} 条更多记录</Text>
+              <Text style={styles.moreRecords}>+ {records.length - 3} more records</Text>
             )}
           </View>
         )}
@@ -302,6 +309,7 @@ export default function Sport() {
     );
   };
 
+  // Bottom navigation
   const renderNavigation = () => (
     <View style={styles.navigationContainer}>
       {['Health', 'Sport', 'Chart', 'Me'].map((page) => (
@@ -319,6 +327,7 @@ export default function Sport() {
     </View>
   );
 
+  // Render permission error UI
   const renderPermissionError = () => (
     <View style={styles.permissionContainer}>
       <Text style={styles.permissionText}>{permissionError}</Text>
@@ -326,7 +335,7 @@ export default function Sport() {
         style={styles.permissionButton}
         onPress={openAppSettings}
       >
-        <Text style={styles.permissionButtonText}>前往设置</Text>
+        <Text style={styles.permissionButtonText}>Go to Settings</Text>
       </TouchableOpacity>
     </View>
   );
@@ -335,7 +344,7 @@ export default function Sport() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4ECDC4" />
-        <Text style={styles.loadingText}>加载运动数据中...</Text>
+        <Text style={styles.loadingText}>Loading sports data...</Text>
       </View>
     );
   }
@@ -343,47 +352,50 @@ export default function Sport() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        {/* Steps tracker section */}
         <View style={styles.stepsModule}>
-          <Text style={styles.stepsTitle}>今日步数</Text>
+          <Text style={styles.stepsTitle}>Today's Steps</Text>
           
           {permissionError ? (
             renderPermissionError()
           ) : isPedometerAvailable && !permissionDenied ? (
             <Text style={styles.stepsNumber}>{steps.toLocaleString()}</Text>
           ) : (
-            <Text style={styles.stepsDisabled}>计步功能不可用</Text>
+            <Text style={styles.stepsDisabled}>Step counter not available</Text>
           )}
           
-          <Text style={styles.stepsSubtitle}>≈ {Math.round(steps * 0.7)} 米</Text>
+          <Text style={styles.stepsSubtitle}>≈ {Math.round(steps * 0.7)} meters</Text>
         </View>
 
+        {/* Exercise modules */}
         {EXERCISE_TYPES.map(type => renderExerciseModule(type.key))}
 
+        {/* Total calories section */}
         <View style={styles.totalCaloriesModule}>
-          <Text style={styles.totalCaloriesTitle}>今日总消耗</Text>
-          <Text style={styles.totalCaloriesNumber}>{Math.round(getTotalCalories())} 千卡</Text>
+          <Text style={styles.totalCaloriesTitle}>Total Burned Today</Text>
+          <Text style={styles.totalCaloriesNumber}>{Math.round(getTotalCalories())} kcal</Text>
           <Text style={styles.caloriesSubtitle}>
-            相当于 {Math.round(getTotalCalories() / 770)} 个苹果
+            Equivalent to {Math.round(getTotalCalories() / 770)} apples
           </Text>
         </View>
 
+        {/* Clear data button (only shown if there's data) */}
         {exerciseData.length > 0 && (
           <TouchableOpacity
             style={styles.clearButton}
             onPress={clearData}
           >
             <MaterialIcons name="delete" size={20} color="white" />
-            <Text style={styles.clearButtonText}>清空今日数据</Text>
+            <Text style={styles.clearButtonText}>Clear Today's Data</Text>
           </TouchableOpacity>
         )}
       </View>
 
+      {/* Bottom navigation */}
       {renderNavigation()}
     </ScrollView>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {

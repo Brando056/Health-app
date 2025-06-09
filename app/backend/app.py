@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from config import config
 import os
 
-# 创建Flask应用
+# Create Flask application
 app = Flask(__name__)
 app.config.from_object(config[os.getenv('FLASK_ENV', 'default')])
 
@@ -21,23 +21,26 @@ def submit_health_data():
     height = data.get('height')
     weight = data.get('weight')
 
+    # Check if required data exists before saving
     if sleep_time and drink_count:
         new_data = HealthData(sleep_time=sleep_time, drink_count=drink_count, height=height, weight=weight)
         db.session.add(new_data)
         db.session.commit()
-        return jsonify({'message': '数据提交成功'}), 200
+        return jsonify({'message': 'Data submitted successfully'}), 200
     else:
-        return jsonify({'message': '数据不完整'}), 400
+        return jsonify({'message': 'Incomplete data'}), 400
 
 @app.route('/submit_locations', methods=['POST'])
 def submit_locations():
     data = request.get_json()
     locations = data.get('locations')
     
+    # Validate locations data
     if not locations:
-        return jsonify({'message': '数据不完整'}), 400
+        return jsonify({'message': 'Incomplete data'}), 400
 
     try:
+        # Delete old locations before adding new ones to keep data in sync
         db.session.query(ReminderLocation).delete()
         for loc in locations:
             new_location = ReminderLocation(
@@ -49,13 +52,14 @@ def submit_locations():
             db.session.add(new_location)
         
         db.session.commit()
-        return jsonify({'message': '地点保存成功'}), 200
+        return jsonify({'message': 'Locations saved successfully'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'保存失败: {str(e)}'}), 500
+        return jsonify({'message': f'Save failed: {str(e)}'}), 500
 
 @app.route('/get_locations', methods=['GET'])
 def get_locations():
+    # Query all reminder locations
     locations = ReminderLocation.query.all()
     result = [{'id': loc.id, 'name': loc.name, 'lat': loc.lat, 'lng': loc.lng, 'type': loc.type} for loc in locations]
     return jsonify(result), 200
@@ -63,16 +67,18 @@ def get_locations():
 @app.route('/delete_location/<int:id>', methods=['DELETE'])
 def delete_location(id):
     try:
+        # Find location by ID and delete if exists
         location = ReminderLocation.query.get(id)
         if location:
             db.session.delete(location)
             db.session.commit()
-            return jsonify({'message': '地点删除成功'}), 200
+            return jsonify({'message': 'Location deleted successfully'}), 200
         else:
-            return jsonify({'message': '地点未找到'}), 404
+            return jsonify({'message': 'Location not found'}), 404
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'删除失败: {str(e)}'}), 500
+        return jsonify({'message': f'Deletion failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
+    # Run Flask app, listening on all interfaces, debug enabled
     app.run(debug=True, host='0.0.0.0')

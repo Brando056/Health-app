@@ -13,24 +13,26 @@ export default function ExerciseTimer() {
   const [weight, setWeight] = useState(60);
   const [circleProgress, setCircleProgress] = useState(0);
 
-  // 30分钟的秒数
+  // 30 minutes in seconds
   const THIRTY_MINUTES = 30 * 60;
   const CIRCLE_RADIUS = 100;
   const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
-  const SVG_SIZE = 220; // SVG容器大小
-  const CENTER = SVG_SIZE / 2; // 中心点坐标
+  const SVG_SIZE = 220; // SVG container size
+  const CENTER = SVG_SIZE / 2; // Center point coordinates
 
+  // Load user's weight from storage on mount
   useEffect(() => {
     loadWeight();
   }, []);
 
+  // Timer effect that runs when timer is active
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isRunning) {
       interval = setInterval(() => {
         setTime(prevTime => {
           const newTime = prevTime + 1;
-          // 计算圆形进度
+          // Calculate circular progress
           const progress = (newTime % THIRTY_MINUTES) / THIRTY_MINUTES;
           setCircleProgress(progress);
           return newTime;
@@ -40,6 +42,7 @@ export default function ExerciseTimer() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  // Load weight from AsyncStorage
   const loadWeight = async () => {
     const weightData = await AsyncStorage.getItem('weight');
     if (weightData) {
@@ -47,6 +50,7 @@ export default function ExerciseTimer() {
     }
   };
 
+  // Calculate calories burned based on exercise type
   const calculateCalories = (duration: number) => {
     const baseCalories = {
       running: 8,
@@ -54,22 +58,24 @@ export default function ExerciseTimer() {
       jumping: 9
     }[type] || 0;
 
-    // 将分钟转换为小时
+    // Convert minutes to hours
     return baseCalories * (duration / 60) * weight * 1.05;
   };
 
+  // Format seconds into MM:SS format
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Handle stopping the timer and save data
   const handleStop = async () => {
     setIsRunning(false);
-    const duration = Math.floor(time / 60); // 转换为分钟
+    const duration = Math.floor(time / 60); // Convert to minutes
     const calories = calculateCalories(duration);
 
-    // 保存运动数据
+    // Save exercise data
     const today = new Date().toDateString();
     const exerciseDataStr = await AsyncStorage.getItem(`exercise_${today}`);
     const exerciseData = exerciseDataStr ? JSON.parse(exerciseDataStr) : [];
@@ -78,24 +84,24 @@ export default function ExerciseTimer() {
       type,
       duration,
       calories,
-      timestamp: Date.now() // 添加时间戳
+      timestamp: Date.now() // Add timestamp
     });
 
     await AsyncStorage.setItem(`exercise_${today}`, JSON.stringify(exerciseData));
 
-    // 返回上一页
+    // Navigate back to previous screen
     router.back();
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        {type === 'running' ? '跑步' : type === 'walking' ? '徒步' : '跳绳'}
+        {type === 'running' ? 'Running' : type === 'walking' ? 'Walking' : 'Jump Rope'}
       </Text>
       
       <View style={styles.timerContainer}>
         <Svg width={SVG_SIZE} height={SVG_SIZE} viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}>
-          {/* 背景圆 */}
+          {/* Background circle */}
           <Circle
             cx={CENTER}
             cy={CENTER}
@@ -104,7 +110,7 @@ export default function ExerciseTimer() {
             strokeWidth={10}
             fill="none"
           />
-          {/* 进度圆 */}
+          {/* Progress circle */}
           <Circle
             cx={CENTER}
             cy={CENTER}
@@ -119,7 +125,7 @@ export default function ExerciseTimer() {
           />
         </Svg>
         
-        {/* 精确居中的计时器文本 */}
+        {/* Centered timer text */}
         <View style={[styles.timeDisplay, { 
           top: CENTER - 25, 
           left: CENTER - 40 
@@ -128,7 +134,7 @@ export default function ExerciseTimer() {
         </View>
         
         <Text style={styles.calories}>
-          预计消耗: {Math.round(calculateCalories(Math.floor(time / 60)))} 卡
+          Estimated Burn: {Math.round(calculateCalories(Math.floor(time / 60)))} cal
         </Text>
       </View>
 
@@ -138,14 +144,14 @@ export default function ExerciseTimer() {
             style={[styles.button, styles.startButton]}
             onPress={() => setIsRunning(true)}
           >
-            <Text style={styles.buttonText}>开始</Text>
+            <Text style={styles.buttonText}>Start</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             style={[styles.button, styles.stopButton]}
             onPress={handleStop}
           >
-            <Text style={styles.buttonText}>结束</Text>
+            <Text style={styles.buttonText}>Stop</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -170,8 +176,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
     position: 'relative',
-    height: 220, // 与SVG高度一致
-    width: 220  // 与SVG宽度一致
+    height: 220, // Matches SVG height
+    width: 220  // Matches SVG width
   },
   timeDisplay: {
     position: 'absolute',
@@ -182,7 +188,7 @@ const styles = StyleSheet.create({
     fontSize: 39,
     fontWeight: 'bold',
     textAlign: 'center',
-    width: 80 // 确保文本有固定宽度以便居中
+    width: 80 // Fixed width for centering
   },
   calories: {
     fontSize: 18,

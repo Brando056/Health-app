@@ -2,41 +2,43 @@ import React, { useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
-// 配置通知权限（保持原样）
+// Configure notification handler (keep as is)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: false,
     shouldSetBadge: false,
+    shouldShowBanner: true,  
+    shouldShowList: true,
   }),
 });
 
-// 修正后的时间触发提醒组件
+// Fixed time-triggered reminder component
 const TimeTriggerReminder = () => {
   useEffect(() => {
     const configureNotifications = async () => {
-      // 请求通知权限
+      // Request notification permission
       const { status } = await Notifications.getPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('通知权限被拒绝');
+        Alert.alert('Notification permission denied');
         return;
       }
 
-      // 删除旧通知
+      // Cancel all previously scheduled notifications
       await Notifications.cancelAllScheduledNotificationsAsync();
 
-      // 创建新的重复通知（每小时一次）
+      // Schedule a new repeating notification (every hour)
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '饮水提醒',
-          body: '该喝水啦！',
+          title: 'Drink Water Reminder',
+          body: "It's time to drink water!",
           sound: 'default',
         },
         trigger: {
           type: 'timeInterval',
           seconds: 60 * 60,
           repeats: true,
-        } as Notifications.TimeIntervalTriggerInput, // 使用类型断言
+        } as Notifications.TimeIntervalTriggerInput, // Use type assertion
       });
     };
 

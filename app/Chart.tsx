@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Dimensions, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart, LineChart } from 'react-native-chart-kit';
@@ -16,20 +17,24 @@ interface ChartData {
 }
 
 const Chart = () => {
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [stepsValue, setStepsValue] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
   const router = useRouter();
   const [drinkData, setDrinkData] = useState<ChartData>({
-    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }]
   });
   const [sleepData, setSleepData] = useState<ChartData>({
-    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }]
   });
   const [stepsData, setStepsData] = useState<ChartData>({
-    labels: Array.from({ length: 30 }, (_, i) => `${i + 1}`),
-    datasets: [{ data: Array(30).fill(0) }]
+    labels: [],
+    datasets: [{ data: [] }]
   });
-
   const [hoveredStepValue, setHoveredStepValue] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +50,7 @@ const Chart = () => {
   const loadWeeklyDrinkData = async () => {
     try {
       const today = new Date();
-      const dayOfWeek = today.getDay() || 7; // 将周日从0改为7
+      const dayOfWeek = today.getDay() || 7;
       const mondayDate = new Date(today);
       mondayDate.setDate(today.getDate() - (dayOfWeek - 1));
 
@@ -63,11 +68,11 @@ const Chart = () => {
       );
 
       setDrinkData({
-        labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [{ data: drinkAmounts }]
       });
     } catch (error) {
-      console.error('加载饮水数据失败:', error);
+      console.error('Failed to load drink data:', error);
     }
   };
 
@@ -92,77 +97,79 @@ const Chart = () => {
       );
 
       setSleepData({
-        labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [{ data: sleepHours }]
       });
     } catch (error) {
-      console.error('加载睡眠数据失败:', error);
+      console.error('Failed to load sleep data:', error);
     }
   };
 
   const loadMonthlyStepsData = async () => {
     try {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const allKeys = await AsyncStorage.getAllKeys();
+      const stepKeys = allKeys.filter(key => key.startsWith('steps_'));
 
-      const monthDates = Array.from({ length: daysInMonth }, (_, i) => {
-        const date = new Date(year, month, i + 1);
-        return date.toDateString();
+      if (stepKeys.length === 0) {
+        setStepsData({ labels: [], datasets: [{ data: [] }] });
+        return;
+      }
+
+      const stepsEntries = await AsyncStorage.multiGet(stepKeys);
+      const stepsData = stepsEntries.map(([key, value]) => {
+        const dateStr = key.replace('steps_', '');
+        return {
+          date: new Date(dateStr),
+          steps: value ? parseInt(value) : 0
+        };
       });
 
-      const steps = await Promise.all(
-        monthDates.map(async (date) => {
-          const step = await AsyncStorage.getItem(`steps_${date}`);
-          return step ? parseInt(step) : 0;
-        })
-      );
+      stepsData.sort((a, b) => a.date.getTime() - b.date.getTime());
+      const allDates = stepsData.map(entry => `${entry.date.getMonth() + 1}/${entry.date.getDate()}`);
+      const allSteps = stepsData.map(entry => entry.steps);
 
-      const labels = Array.from({ length: daysInMonth }, (_, i) => {
-        const day = i + 1;
-        if (day < 10) {
-          return `${day}`;
-        } else {
-          return `${String(day)[0]}\n${String(day)[1]}`;
+      let labels: string[] = [];
+      if (allDates.length <= 15) {
+        labels = allDates;
+      } else {
+        const step = Math.floor(allDates.length / 14);
+        for (let i = 0; i < allDates.length; i++) {
+          if (i === 0 || i === allDates.length - 1 || i % step === 0) {
+            labels.push(allDates[i]);
+          } else {
+            labels.push('');
+          }
         }
-      });
+      }
 
-      setStepsData({
-        labels: labels,
-        datasets: [{ data: steps }]
-      });
+      setStepsData({ labels, datasets: [{ data: allSteps }] });
     } catch (error) {
-      console.error('加载步数数据失败:', error);
+      console.error('Failed to load steps data:', error);
     }
   };
 
-  const handleStepsDataPoint = (data: any, index: number) => {
-    setHoveredStepValue(`${stepsData.labels[index]}: ${stepsData.datasets[0].data[index]} 步`);
+  const openTestModal = () => {
+    setIsTestModalOpen(true);
+    setSelectedDate(new Date());
+    setStepsValue('');
+  };
+
+  const saveTestSteps = async () => {
+    if (!selectedDate || stepsValue === '') return;
+    const dateKey = `steps_${selectedDate.toISOString().split('T')[0]}`;
+    await AsyncStorage.setItem(dateKey, stepsValue);
+    setIsTestModalOpen(false);
+    loadChartData();
   };
 
   const chartConfig = {
-    backgroundGradientFrom: "#ffffff",
-    backgroundGradientTo: "#ffffff",
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     strokeWidth: 2,
     barPercentage: 0.6,
-    decimalPlaces: 0
-  };
-
-  const drinkChartConfig = {
-    ...chartConfig,
-    color: (opacity = 1) => `rgba(71, 136, 214, ${opacity})`
-  };
-
-  const sleepChartConfig = {
-    ...chartConfig,
-    color: (opacity = 1) => `rgba(105, 201, 140, ${opacity})`
-  };
-
-  const stepsChartConfig = {
-    ...chartConfig,
-    color: (opacity = 1) => `rgba(225, 95, 85, ${opacity})`
+    decimalPlaces: 0,
+    propsForLabels: { fontSize: 10 }
   };
 
   const renderNavigation = () => (
@@ -170,10 +177,7 @@ const Chart = () => {
       {['Health', 'Sport', 'Chart', 'Me'].map((page) => (
         <TouchableOpacity
           key={page}
-          style={[
-            styles.navButton, 
-            page === 'Chart' && styles.activeButton
-          ]}
+          style={[styles.navButton, page === 'Chart' && styles.activeButton]}
           onPress={() => router.push(`./${page}`)}
         >
           <Text style={styles.buttonText}>{page}</Text>
@@ -184,119 +188,137 @@ const Chart = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* 周饮水柱状图 */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>本周饮水量 (ml)</Text>
-        <BarChart
-          data={drinkData}
-          width={width - 40}
-          height={220}
-          chartConfig={drinkChartConfig}
-          yAxisLabel=""
-          yAxisSuffix="ml"
-          fromZero={true}
-          showValuesOnTopOfBars={true}
-          style={styles.chart}
-        />
+      {/* Water intake chart */}
+      <Text style={styles.chartTitle}>Weekly Water Intake (ml)</Text>
+      <BarChart
+        data={drinkData}
+        width={width - 40}
+        height={220}
+        chartConfig={{ ...chartConfig, color: (o) => `rgba(71,136,214,${o})` }}
+        yAxisLabel=''
+        yAxisSuffix="ml"
+        fromZero
+        showValuesOnTopOfBars
+        style={styles.chart}
+      />
+
+      {/* Sleep chart */}
+      <Text style={styles.chartTitle}>Weekly Sleep Duration (hours)</Text>
+      <BarChart
+        data={sleepData}
+        width={width - 40}
+        height={220}
+        chartConfig={{ ...chartConfig, color: (o) => `rgba(105,201,140,${o})` }}
+        yAxisLabel=''
+        yAxisSuffix="h"
+        fromZero
+        showValuesOnTopOfBars
+        style={styles.chart}
+      />
+
+      {/* Step count chart */}
+      <View style={styles.chartTitleContainer}>
+        <Text style={styles.chartTitle}>Monthly Step Count</Text>
+        <TouchableOpacity style={styles.testButton} onPress={openTestModal}>
+          <Text style={styles.testButtonText}>Test Adjust</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* 周睡眠柱状图 */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>本周睡眠时间 (小时)</Text>
-        <BarChart
-          data={sleepData}
-          width={width - 40}
-          height={220}
-          chartConfig={sleepChartConfig}
-          yAxisLabel=""
-          yAxisSuffix="h"
-          fromZero={true}
-          showValuesOnTopOfBars={true}
-          style={styles.chart}
-        />
-      </View>
+      {hoveredStepValue && <Text style={styles.tooltipText}>{hoveredStepValue}</Text>}
 
-      {/* 月步数折线图 */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>本月步数</Text>
-        {hoveredStepValue && (
-          <View style={styles.tooltipContainer}>
-            <Text style={styles.tooltipText}>{hoveredStepValue}</Text>
-          </View>
-        )}
+      {stepsData.labels.length > 0 ? (
         <LineChart
           data={stepsData}
           width={width - 40}
           height={220}
-          chartConfig={stepsChartConfig}
-          yAxisLabel=""
-          yAxisSuffix=" 步"
+          chartConfig={{
+            ...chartConfig,
+            color: (o) => `rgba(225,95,85,${o})`,
+            fillShadowGradient: `rgba(225,95,85,0.2)`,
+            fillShadowGradientTo: `rgba(225,95,85,0)`,
+            propsForDots: {
+              r: '4',
+              strokeWidth: '2',
+              stroke: '#ffa726',
+            }
+          }}
           bezier
+          onDataPointClick={({ index }) => setHoveredStepValue(`${stepsData.labels[index]}: ${stepsData.datasets[0].data[index]} steps`)}
           style={styles.chart}
-          onDataPointClick={({ value, dataset, getColor, index }) => handleStepsDataPoint(dataset, index)}
         />
-      </View>
+      ) : (
+        <Text style={styles.noDataText}>No step data available</Text>
+      )}
 
-      {/* 底部导航 */}
+      {/* Date and step input Modal */}
+      <Modal visible={isTestModalOpen} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Adjust Step Data</Text>
+
+            <TouchableOpacity style={styles.datePicker} onPress={() => setShowPicker(true)}>
+              <Text>Select Date: {selectedDate?.toLocaleDateString() || 'Not selected'}</Text>
+            </TouchableOpacity>
+
+            {showPicker && (
+              <DateTimePicker
+                value={selectedDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, date) => {
+                  setShowPicker(Platform.OS === 'ios');
+                  if (date) setSelectedDate(date);
+                }}
+              />
+            )}
+
+            <TextInput
+              style={styles.stepsInput}
+              placeholder="Enter steps"
+              keyboardType="numeric"
+              value={stepsValue}
+              onChangeText={setStepsValue}
+            />
+
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity onPress={() => setIsTestModalOpen(false)} style={styles.modalButton}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveTestSteps} style={[styles.modalButton, styles.saveButton]}>
+                <Text style={{ color: 'white' }}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Bottom navigation */}
       {renderNavigation()}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 20
-  },
-  chartContainer: {
-    marginBottom: 30
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333'
-  },
-  tooltipContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 8,
-    borderRadius: 5,
-    marginBottom: 10,
-    alignSelf: 'center'
-  },
-  tooltipText: {
-    color: '#fff',
-    fontSize: 14
-  },
-  navigationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-
-  },
-  navButton: {
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  activeButton: {
-    backgroundColor: '#4ECDC4',
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  chart: { marginVertical: 8, borderRadius: 16 },
+  chartTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333' },
+  chartTitleContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
+  testButton: { padding: 6 },
+  testButtonText: { color: '#4ECDC4' },
+  tooltipText: { textAlign: 'center', color: '#555', marginBottom: 5 },
+  noDataText: { textAlign: 'center', color: '#888', marginTop: 20 },
+  navigationContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
+  navButton: { padding: 10 },
+  activeButton: { backgroundColor: '#4ECDC4', borderRadius: 10 },
+  buttonText: { color: '#333' },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalContent: { width: '90%', backgroundColor: '#fff', padding: 20, borderRadius: 10 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+  datePicker: { borderWidth: 1, padding: 10, borderRadius: 6, marginBottom: 10 },
+  stepsInput: { borderWidth: 1, padding: 10, borderRadius: 6, marginBottom: 20 },
+  buttonGroup: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
+  modalButton: { padding: 10, minWidth: 80, alignItems: 'center' },
+  saveButton: { backgroundColor: '#4ECDC4', borderRadius: 6 },
 });
 
 export default Chart;

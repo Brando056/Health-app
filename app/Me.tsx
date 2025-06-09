@@ -20,20 +20,20 @@ import { useRef } from 'react';
 const CIRCLE_RADIUS = 100;
 const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
-// 预设的久坐提醒语句
+// Predefined sedentary reminder messages
 const SEDENTARY_PRESET_MESSAGES = [
-  '长时间坐着不利于健康，起来活动一下吧！',
-  '久坐易疲劳，起身舒展一下筋骨吧！',
-  '别忘了定时活动，久坐会增加健康风险哦！',
-  '每小时起身活动5分钟，健康生活从点滴开始！',
+  'Prolonged sitting is unhealthy, get up and move!',
+  'Sitting too long causes fatigue, stretch your muscles!',
+  'Remember to move regularly, sitting increases health risks!',
+  'Get up for 5 minutes every hour for a healthier lifestyle!',
 ];
 
-// 预设的饮水提醒语句
+// Predefined drinking reminder messages
 const DRINKING_PRESET_MESSAGES = [
-  '记得喝水哦，保持身体水分平衡！',
-  '喝水时间到，每天8杯水，健康常相随！',
-  '适当饮水有助于提高工作效率！',
-  '别忘记补水，你的身体需要水分！',
+  'Remember to drink water, stay hydrated!',
+  'Time for water! 8 glasses a day keeps you healthy!',
+  'Proper hydration improves work efficiency!',
+  'Don\'t forget to hydrate, your body needs water!',
 ];
 
 const Me = () => {
@@ -44,9 +44,9 @@ const Me = () => {
   const [checkInDays, setCheckInDays] = useState(0);
   const [suggestedLocations, setSuggestedLocations] = useState<any[]>([]);
   const [isSuggestionsVisible, setIsSuggestionsVisible] = useState(false);
-  const TENCENT_MAP_API_KEY = 'X5MBZ-4M7WU-RAWVF-GVCZL-ADAKQ-D2FWN'; // 替换为你的腾讯地图 API Key
-  const [sedentaryReminderMessage, setSedentaryReminderMessage] = useState('注意要多起身活动活动');
-  const [drinkingReminderMessage, setDrinkingReminderMessage] = useState('注意要多喝水');
+  const TENCENT_MAP_API_KEY = 'X5MBZ-4M7WU-RAWVF-GVCZL-ADAKQ-D2FWN'; // Your Tencent Map API Key
+  const [sedentaryReminderMessage, setSedentaryReminderMessage] = useState('Remember to get up and move');
+  const [drinkingReminderMessage, setDrinkingReminderMessage] = useState('Remember to drink water');
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState('');
   const [showSedentaryPresets, setShowSedentaryPresets] = useState(false);
@@ -60,6 +60,7 @@ const Me = () => {
   const [selectedLocations, setSelectedLocations] = useState<{ name: string; lat: number; lng: number; type: string; resolvedLat?: number; resolvedLng?: number }[]>([]);
   const ipIntervalRef = useRef<number | null>(null);
 
+  // Load saved data on component mount
   useEffect(() => {
     const loadData = async () => {
       const days = await AsyncStorage.getItem('checkInDays');
@@ -83,12 +84,13 @@ const Me = () => {
     loadData();
   }, []);
 
+  // Setup location tracking
   useEffect(() => {
     let locationTask: Location.LocationSubscription;
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('提示', '无法获取定位权限，请手动开启');
+        Alert.alert('Notice', 'Location permission denied, please enable manually');
         return;
       }
       locationTask = await Location.watchPositionAsync(
@@ -107,9 +109,10 @@ const Me = () => {
     };
   }, [selectedLocations, sedentaryReminderMessage, drinkingReminderMessage, lastReminded]);
 
+  // Setup notifications
   useEffect(() => {
     (async () => {
-      // 默认配置安卓通知通道，移除Platform检查
+      // Configure Android notification channel
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
         importance: Notifications.AndroidImportance.MAX,
@@ -119,11 +122,12 @@ const Me = () => {
       
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('提示', '无法获取通知权限，请手动开启');
+        Alert.alert('Notice', 'Notification permission denied, please enable manually');
       }
     })();
   }, []);
 
+  // Save height and weight data
   const saveHeightWeight = async () => {
     if (height && weight) {
       try {
@@ -139,17 +143,17 @@ const Me = () => {
         });
 
         const data = await response.json();
-        if (data.message === '数据提交成功') {
-          // 保存到 AsyncStorage
+        if (data.message === 'Data submitted successfully') {
+          // Save to AsyncStorage
           await AsyncStorage.setItem('height', height);
           await AsyncStorage.setItem('weight', weight);
 
           Alert.alert(
-            '成功',
-            '身高体重数据已成功保存',
+            'Success',
+            'Height and weight saved successfully',
             [
               {
-                text: '确定',
+                text: 'OK',
                 onPress: () => {
                   setHeight('');
                   setWeight('');
@@ -158,22 +162,23 @@ const Me = () => {
             ]
           );
         } else {
-          Alert.alert('提示', '数据提交失败');
+          Alert.alert('Notice', 'Data submission failed');
         }
       } catch (error) {
-        console.error('数据提交失败:', error);
-        Alert.alert('提示', '数据提交失败');
+        console.error('Data submission failed:', error);
+        Alert.alert('Notice', 'Data submission failed');
       }
     } else {
-      Alert.alert('提示', '请输入身高和体重');
+      Alert.alert('Notice', 'Please enter both height and weight');
     }
   };
 
+  // Handle daily check-in
   const handleCheckIn = async () => {
     const lastCheckInDate = await AsyncStorage.getItem('lastCheckInDate');
     const today = new Date().toDateString();
     if (lastCheckInDate === today) {
-      Alert.alert('提示', '你今天已经打卡过了');
+      Alert.alert('Notice', 'You already checked in today');
     } else {
       const now = new Date();
       const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -184,10 +189,11 @@ const Me = () => {
       setCheckInDays(newCheckInDays);
       setIsCheckedIn(true);
       setCheckInTime(timeString);
-      Alert.alert('提示', `你已经坚持打卡 ${newCheckInDays} 天`);
+      Alert.alert('Notice', `You've checked in ${newCheckInDays} days in a row!`);
     }
   };
 
+  // Get location suggestions based on input
   const getLocationSuggestions = async (input: string) => {
     if (input.trim() === '') {
       setSuggestedLocations([]);
@@ -207,28 +213,29 @@ const Me = () => {
         setIsSuggestionsVisible(false);
       }
     } catch (error) {
-      console.error('获取地点建议失败:', error);
+      console.error('Failed to get location suggestions:', error);
       setSuggestedLocations([]);
       setIsSuggestionsVisible(false);
     }
   };
 
+  // Prompt user to select reminder type for a location
   const promptLocationType = () => {
     return new Promise<string | null>((resolve) => {
       Alert.alert(
-        '选择提醒类型',
-        '请选择该地点的提醒类型',
+        'Select Reminder Type',
+        'Choose reminder type for this location',
         [
           {
-            text: '久坐提醒',
+            text: 'Sedentary Reminder',
             onPress: () => resolve('sedentary'),
           },
           {
-            text: '饮水提醒',
+            text: 'Hydration Reminder',
             onPress: () => resolve('drinking'),
           },
           {
-            text: '取消',
+            text: 'Cancel',
             onPress: () => resolve(null),
             style: 'cancel',
           },
@@ -238,6 +245,7 @@ const Me = () => {
     });
   };
 
+  // Check if user is near a reminder location
   const checkLocationProximity = (userLat: number, userLng: number) => {
     const now = Date.now();
     selectedLocations.forEach((location) => {
@@ -247,10 +255,10 @@ const Me = () => {
         let message = '';
         if (location.type === 'sedentary') {
           message = sedentaryReminderMessage;
-          Alert.alert('久坐提醒', message);
+          Alert.alert('Sedentary Reminder', message);
         } else if (location.type === 'drinking') {
           message = drinkingReminderMessage;
-          Alert.alert('饮水提醒', message);
+          Alert.alert('Hydration Reminder', message);
         }
         sendNotification(message);
         setLastReminded((prev) => ({ ...prev, [key]: now }));
@@ -258,8 +266,9 @@ const Me = () => {
     });
   };
 
+  // Calculate distance between two points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371e3; // 地球半径，单位：米
+    const R = 6371e3; // Earth radius in meters
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -273,10 +282,11 @@ const Me = () => {
     return R * c;
   };
 
+  // Send notification
   const sendNotification = async (message: string) => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '健康提醒',
+        title: 'Health Reminder',
         body: message,
         sound: 'default',
       },
@@ -284,14 +294,16 @@ const Me = () => {
     });
   };
 
+  // Delete location reminder
   const deleteLocation = async (index: number) => {
     const updated = [...selectedLocations];
     updated.splice(index, 1);
     setSelectedLocations(updated);
     await AsyncStorage.setItem('selectedLocations', JSON.stringify(updated));
-    Alert.alert('提示', '提醒地点已删除');
+    Alert.alert('Notice', 'Reminder location deleted');
   };
 
+  // Bottom navigation bar
   const renderNavigation = () => (
     <View style={styles.navigationContainer}>
       {['Health', 'Sport', 'Chart', 'Me'].map((page) => (
@@ -309,6 +321,7 @@ const Me = () => {
     </View>
   );
 
+  // Get location by IP address
   const fetchIpLocation = async () => {
     setLoadingIpLocation(true);
     try {
@@ -319,34 +332,34 @@ const Me = () => {
       if (data.status === 0) {
         setIpLocation(data.result);
       } else {
-        Alert.alert('定位失败', data.message || '未知错误');
+        Alert.alert('Location failed', data.message || 'Unknown error');
         setIpLocation(null);
       }
     } catch (error) {
-      Alert.alert('网络错误', '无法获取定位信息');
+      Alert.alert('Network Error', 'Could not get location info');
       setIpLocation(null);
     }
     setLoadingIpLocation(false);
   };
 
-  // 自动定时获取IP定位
-    useEffect(() => {
-      // 组件挂载时立即获取一次
+  // Periodic IP location check
+  useEffect(() => {
+    // Get on mount
+    fetchIpLocation();
+    // Get every 2 minutes
+    ipIntervalRef.current = setInterval(() => {
       fetchIpLocation();
-      // 每120秒自动获取一次
-      ipIntervalRef.current = setInterval(() => {
-        fetchIpLocation();
-      }, 120000); // 修改为120秒
+    }, 120000);
 
-      // 卸载时清理定时器
-      return () => {
-        if (ipIntervalRef.current) {
-          clearInterval(ipIntervalRef.current);
-        }
-      };
-    }, []);
+    // Cleanup on unmount
+    return () => {
+      if (ipIntervalRef.current) {
+        clearInterval(ipIntervalRef.current);
+      }
+    };
+  }, []);
 
-  // 地址转经纬度（用于提醒地点）
+  // Convert address to coordinates
   const fetchLatLngByAddress = async (address: string) => {
     const key = 'X5MBZ-4M7WU-RAWVF-GVCZL-ADAKQ-D2FWN';
     const url = `https://apis.map.qq.com/ws/geocoder/v1/?address=${encodeURIComponent(address)}&key=${key}`;
@@ -363,23 +376,23 @@ const Me = () => {
     }
   };
 
-  // 判断当前位置是否进入50米范围
+  // Check if user entered 50m range of address
   const checkAddressProximity = (userLat: number, userLng: number) => {
     if (addressLatLng) {
       const distance = calculateDistance(userLat, userLng, addressLatLng.lat, addressLatLng.lng);
       if (distance < 50) {
-        Alert.alert('提醒', '你已进入设定地址的50米范围内');
+        Alert.alert('Reminder', 'You\'ve entered the 50m range of the set address');
       }
     }
   };
 
-  // 监听定位，实时更新
+  // Location tracking for proximity detection
   useEffect(() => {
     let locationTask: Location.LocationSubscription;
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('提示', '无法获取定位权限，请手动开启');
+        Alert.alert('Notice', 'Location permission denied, please enable manually');
         return;
       }
       locationTask = await Location.watchPositionAsync(
@@ -399,106 +412,110 @@ const Me = () => {
     };
   }, [selectedLocations, sedentaryReminderMessage, drinkingReminderMessage, lastReminded]);
 
-  // 新增：添加提醒地点时自动解析经纬度
-const selectLocation = async (location: any) => {
-  setReminderLocationInput(location.title);
-  setIsSuggestionsVisible(false);
-  const locationType = await promptLocationType();
-  if (locationType) {
-    // 解析经纬度
-    const resolved = await fetchLatLngByAddress(location.title);
-    const newLocation = {
-      name: location.title,
-      lat: location.location.lat,
-      lng: location.location.lng,
-      type: locationType,
-      resolvedLat: resolved ? resolved.lat : null,
-      resolvedLng: resolved ? resolved.lng : null,
-    };
-    const updatedLocations = [...selectedLocations, newLocation];
-    setSelectedLocations(updatedLocations);
-    await AsyncStorage.setItem('selectedLocations', JSON.stringify(updatedLocations));
-    Alert.alert('提示', '提醒地点保存成功');
+  // Add location reminder with automatic coordinates
+  const selectLocation = async (location: any) => {
+    setReminderLocationInput(location.title);
+    setIsSuggestionsVisible(false);
+    const locationType = await promptLocationType();
+    if (locationType) {
+      // Get coordinates for the location
+      const resolved = await fetchLatLngByAddress(location.title);
+      const newLocation = {
+        name: location.title,
+        lat: location.location.lat,
+        lng: location.location.lng,
+        type: locationType,
+        resolvedLat: resolved ? resolved.lat : null,
+        resolvedLng: resolved ? resolved.lng : null,
+      };
+      const updatedLocations = [...selectedLocations, newLocation];
+      setSelectedLocations(updatedLocations);
+      await AsyncStorage.setItem('selectedLocations', JSON.stringify(updatedLocations));
+      Alert.alert('Notice', 'Reminder location saved');
 
-    // 新增逻辑：如果用户当前在提醒地点范围内，立即弹出一次提醒
-    if (currentCoords) {
-      checkAllLocationProximity(currentCoords.lat, currentCoords.lng);
-    }
-  }
-};
-
-// 检查所有提醒地点，进入50米范围弹窗
-const checkAllLocationProximity = (userLat: number, userLng: number) => {
-  const now = Date.now();
-  selectedLocations.forEach((location, idx) => {
-    // 优先用解析后的经纬度
-    const targetLat = location.resolvedLat ?? location.lat;
-    const targetLng = location.resolvedLng ?? location.lng;
-    if (targetLat && targetLng) {
-      const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
-      const key = `${location.name}_${location.type}`;
-      if (distance < 50 && (!lastReminded[key] || now - lastReminded[key] > 10 * 60 * 1000)) {
-        let message = '';
-        if (location.type === 'sedentary') {
-          message = sedentaryReminderMessage;
-        } else if (location.type === 'drinking') {
-          message = drinkingReminderMessage;
-        } else {
-          message = '你已进入提醒地点附近';
-        }
-        Alert.alert('提醒', `${location.name}\n${message}`);
-        sendNotification(message);
-        setLastReminded((prev) => ({ ...prev, [key]: now }));
+      // Immediately notify if user is in the area
+      if (currentCoords) {
+        checkAllLocationProximity(currentCoords.lat, currentCoords.lng);
+      } else {
+        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        checkAllLocationProximity(location.coords.latitude, location.coords.longitude);
       }
     }
-  });
-};
+  };
+
+  // Check all locations for proximity
+  const checkAllLocationProximity = (userLat: number, userLng: number) => {
+    const now = Date.now();
+    selectedLocations.forEach((location, idx) => {
+      // Use resolved coordinates if available
+      const targetLat = location.resolvedLat ?? location.lat;
+      const targetLng = location.resolvedLng ?? location.lng;
+      if (targetLat && targetLng) {
+        const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
+        const key = `${location.name}_${location.type}`;
+        if (distance < 50 && (!lastReminded[key] || now - lastReminded[key] > 10 * 60 * 1000)) {
+          let message = '';
+          if (location.type === 'sedentary') {
+            message = sedentaryReminderMessage;
+          } else if (location.type === 'drinking') {
+            message = drinkingReminderMessage;
+          } else {
+            message = 'You are near a reminder location';
+          }
+          Alert.alert('Reminder', `${location.name}\n${message}`);
+          sendNotification(message);
+          setLastReminded((prev) => ({ ...prev, [key]: now }));
+        }
+      }
+    });
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* 身高体重设置 */}
+      {/* Height and weight input */}
       <View style={styles.section}>
-        <Text style={styles.label}>身高 (cm)</Text>
+        <Text style={styles.label}>Height (cm)</Text>
         <TextInput
           style={styles.input}
           value={height}
           onChangeText={setHeight}
-          placeholder="输入身高"
+          placeholder="Enter height"
           keyboardType="numeric"
         />
       </View>
       <View style={styles.section}>
-        <Text style={styles.label}>体重 (kg)</Text>
+        <Text style={styles.label}>Weight (kg)</Text>
         <TextInput
           style={styles.input}
           value={weight}
           onChangeText={setWeight}
-          placeholder="输入体重"
+          placeholder="Enter weight"
           keyboardType="numeric"
         />
       </View>
       <TouchableOpacity style={styles.button} onPress={saveHeightWeight}>
-        <Text style={styles.buttonText}>保存身高体重</Text>
+        <Text style={styles.buttonText}>Save Height & Weight</Text>
       </TouchableOpacity>
 
-      {/* 新增：IP定位显示 */}
+      {/* IP-based location */}
       <View style={styles.section}>
-        <Text style={styles.label}>IP定位（市级）</Text>
+        <Text style={styles.label}>IP-Based Location (City Level)</Text>
         {loadingIpLocation && <ActivityIndicator size="small" color="#4CAF50" />}
         {ipLocation && (
           <View style={{ marginTop: 10 }}>
             <Text>IP: {ipLocation.ip}</Text>
-            <Text>经度: {ipLocation.location.lng}</Text>
-            <Text>纬度: {ipLocation.location.lat}</Text>
-            <Text>省份: {ipLocation.ad_info.province}</Text>
-            <Text>城市: {ipLocation.ad_info.city}</Text>
-            <Text>区县: {ipLocation.ad_info.district}</Text>
+            <Text>Longitude: {ipLocation.location.lng}</Text>
+            <Text>Latitude: {ipLocation.location.lat}</Text>
+            <Text>Province: {ipLocation.ad_info.province}</Text>
+            <Text>City: {ipLocation.ad_info.city}</Text>
+            <Text>District: {ipLocation.ad_info.district}</Text>
           </View>
         )}
       </View>
 
-      {/* 提醒地点设置 */}
+      {/* Reminder location setup */}
       <View style={styles.section}>
-        <Text style={styles.label}>设置提醒地点</Text>
+        <Text style={styles.label}>Set Reminder Location</Text>
         <TextInput
           style={styles.input}
           value={reminderLocationInput}
@@ -506,7 +523,7 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
             setReminderLocationInput(text);
             getLocationSuggestions(text);
           }}
-          placeholder="输入地点名称"
+          placeholder="Enter location name"
         />
         {isSuggestionsVisible && (
           <View style={styles.suggestionsContainer}>
@@ -523,32 +540,32 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
         )}
       </View>
 
-      {/* 显示已设置的提醒地点及经纬度 */}
+      {/* Saved reminder locations */}
       <View style={styles.section}>
-        <Text style={styles.label}>已设置的提醒地点</Text>
+        <Text style={styles.label}>Saved Reminder Locations</Text>
         {selectedLocations.map((location, index) => (
           <View key={index} style={styles.locationItem}>
             <View>
-              <Text>{location.name} - {location.type}</Text>
+              <Text>{location.name} - {location.type === 'sedentary' ? 'Sedentary' : 'Hydration'}</Text>
               <Text style={{fontSize: 12, color: '#888'}}>
-                经纬度: {location.resolvedLat ?? location.lat}, {location.resolvedLng ?? location.lng}
+                Coordinates: {location.resolvedLat ?? location.lat}, {location.resolvedLng ?? location.lng}
               </Text>
             </View>
             <TouchableOpacity onPress={() => deleteLocation(index)}>
-              <Text style={styles.deleteButton}>删除</Text>
+              <Text style={styles.deleteButton}>Delete</Text>
             </TouchableOpacity>
           </View>
         ))}
       </View>
 
-      {/* 久坐提醒自定义语句 */}
+      {/* Sedentary reminder customization */}
       <View style={styles.section}>
-        <Text style={styles.label}>久坐提醒语句</Text>
+        <Text style={styles.label}>Sedentary Reminder</Text>
         <TextInput
           style={styles.input}
           value={sedentaryReminderMessage}
           onChangeText={setSedentaryReminderMessage}
-          placeholder="输入久坐提醒语句"
+          placeholder="Enter sedentary reminder message"
           onFocus={() => {
             setShowSedentaryPresets(true);
             setShowDrinkingPresets(false);
@@ -575,14 +592,14 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
         )}
       </View>
 
-      {/* 饮水提醒自定义语句 */}
+      {/* Hydration reminder customization */}
       <View style={styles.section}>
-        <Text style={styles.label}>饮水提醒语句</Text>
+        <Text style={styles.label}>Hydration Reminder</Text>
         <TextInput
           style={styles.input}
           value={drinkingReminderMessage}
           onChangeText={setDrinkingReminderMessage}
-          placeholder="输入饮水提醒语句"
+          placeholder="Enter hydration reminder message"
           onFocus={() => {
             setShowDrinkingPresets(true);
             setShowSedentaryPresets(false);
@@ -609,10 +626,10 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
         )}
       </View>
 
-      {/* 打卡环形 */}
+      {/* Check-in circle */}
       <View style={styles.checkInContainer}>
         <Svg width={CIRCLE_RADIUS * 2 + 20} height={CIRCLE_RADIUS * 2 + 20}>
-          {/* 背景圆 */}
+          {/* Background circle */}
           <Circle
             cx={CIRCLE_RADIUS + 10}
             cy={CIRCLE_RADIUS + 10}
@@ -621,7 +638,7 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
             strokeWidth={10}
             fill="none"
           />
-          {/* 进度圆 */}
+          {/* Progress circle */}
           <Circle
             cx={CIRCLE_RADIUS + 10}
             cy={CIRCLE_RADIUS + 10}
@@ -636,17 +653,18 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
         </Svg>
         <TouchableOpacity style={styles.checkInButton} onPress={handleCheckIn}>
           <Text style={styles.checkInText}>
-            {isCheckedIn ? `已打卡\n时间: ${checkInTime}\n已打卡 ${checkInDays} 天` : '点击打卡'}
+            {isCheckedIn ? `Checked In\nTime: ${checkInTime}\nDays: ${checkInDays}` : 'Check In'}
           </Text>
         </TouchableOpacity>
       </View>
-      {/* 底部导航 */}
+      
+      {/* Bottom navigation */}
       {renderNavigation()}
     </ScrollView>
   );
 };
 
-const NAVIGATION_HEIGHT = 50; // 导航栏的高度
+const NAVIGATION_HEIGHT = 50; // Navigation bar height
 
 const styles = StyleSheet.create({
   container: {
@@ -655,7 +673,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: NAVIGATION_HEIGHT, // 为导航栏留出空间
+    paddingBottom: NAVIGATION_HEIGHT, // Padding for navigation
   },
   section: {
     marginBottom: 16,
@@ -735,7 +753,10 @@ const styles = StyleSheet.create({
     borderTopColor: '#EEE',
     paddingVertical: 10,
     paddingHorizontal: 15,
-
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   navButton: {
     padding: 10,

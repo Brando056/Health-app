@@ -7,6 +7,7 @@ const DataInput = () => {
   const [drinkCount, setDrinkCount] = useState('');
   const router = useRouter();
 
+  // Handle form submission
   const handleSubmit = async () => {
     try {
       const response = await fetch('http://localhost:5000/submit_health_data', {
@@ -22,27 +23,27 @@ const DataInput = () => {
 
       const data = await response.json();
       console.log(data);
-      router.back(); // 提交后返回首页
+      router.back(); // Go back to the previous page after submission
     } catch (error) {
-      console.error('数据提交失败:', error);
+      console.error('Failed to submit data:', error);
     }
   };
 
   return (
     <View>
-      <Text>睡眠时间:</Text>
+      <Text>Sleep Duration:</Text>
       <TextInput
         value={sleepTime}
         onChangeText={(text) => setSleepTime(text)}
-        placeholder="请输入睡眠时间"
+        placeholder="Enter sleep duration"
       />
-      <Text>饮水次数:</Text>
+      <Text>Drink Count:</Text>
       <TextInput
         value={drinkCount}
         onChangeText={(text) => setDrinkCount(text)}
-        placeholder="请输入饮水次数"
+        placeholder="Enter drink count"
       />
-      <Button title="提交" onPress={handleSubmit} />
+      <Button title="Submit" onPress={handleSubmit} />
     </View>
   );
 };

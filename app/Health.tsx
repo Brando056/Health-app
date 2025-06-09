@@ -15,7 +15,7 @@ export default function Health() {
     useEffect(() => {
         loadData();
 
-        // 设置每日零点重置的定时器
+        // Set a timer to reset data at midnight
         const now = new Date();
         const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
         const timeUntilMidnight = midnight.getTime() - now.getTime();
@@ -38,7 +38,7 @@ export default function Health() {
         const today = new Date().toDateString();
 
         if (lastResetDate !== today) {
-            // 如果是新的一天，重置数据
+            // If it's a new day, reset data
             await AsyncStorage.setItem('dailyDrinkAmount', '0');
             await AsyncStorage.setItem('lastResetDate', today);
             setDrinkAmount(0);
@@ -59,33 +59,33 @@ export default function Health() {
             setSleepHours(parseFloat(sleepHoursData));
         }
 
-        // 计算健康分数
+        // Calculate health score
         calculateHealthScore();
     };
 
     const calculateHealthScore = async () => {
-        // 获取体重数据
+        // Get weight data
         const weightData = await AsyncStorage.getItem('weight');
         const weight = weightData ? parseFloat(weightData) : 60;
 
-        // 获取今日运动数据
+        // Get today's exercise data
         const today = new Date().toDateString();
         const exerciseDataStr = await AsyncStorage.getItem(`exercise_${today}`);
         const exerciseData = exerciseDataStr ? JSON.parse(exerciseDataStr) : [];
         
-        // 计算总消耗卡路里
+        // Calculate total calories burned
         const totalCalories = exerciseData.reduce((sum: any, data: { calories: any; }) => sum + data.calories, 0);
         
-        // 计算运动得分 (40%权重)
+        // Calculate exercise score (40% weight)
         const exerciseScore = Math.min(totalCalories / (5 * weight * 0.83 * 1.05), 1) * 0.4;
         
-        // 计算饮水得分 (30%权重)
+        // Calculate hydration score (30% weight)
         const drinkScore = Math.min(drinkAmount / 2000, 1) * 0.3;
         
-        // 计算睡眠得分 (30%权重)
+        // Calculate sleep score (30% weight)
         const sleepScore = Math.min(sleepHours / 8, 1) * 0.3;
         
-        // 计算总分
+        // Calculate total score
         const totalScore = exerciseScore + drinkScore + sleepScore;
         setHealthScore(totalScore);
     };
@@ -96,7 +96,7 @@ export default function Health() {
             const diff = now - lastDrinkTime;
             return Math.floor(diff / (1000 * 60));
         }
-        return '无记录';
+        return 'No record';
     };
 
     const getDrinkBarIndex = () => {
@@ -128,10 +128,10 @@ export default function Health() {
     };
 
     const getHealthStatus = () => {
-        if (healthScore < 0.6) return { color: '#999', text: '不及格' };
-        if (healthScore < 0.7) return { color: '#FFD700', text: '合格' };
-        if (healthScore < 0.8) return { color: '#FFA500', text: '良好' };
-        return { color: '#4CAF50', text: '优秀' };
+        if (healthScore < 0.6) return { color: '#999', text: 'Failing' };
+        if (healthScore < 0.7) return { color: '#FFD700', text: 'Pass' };
+        if (healthScore < 0.8) return { color: '#FFA500', text: 'Good' };
+        return { color: '#4CAF50', text: 'Excellent' };
     };
 
     const healthStatus = getHealthStatus();
@@ -165,14 +165,14 @@ export default function Health() {
 
     return (
         <ScrollView style={styles.container}>
-            {/* 饮水模块 */}
+            {/* Water Intake Module */}
             <TouchableOpacity
                 style={styles.module}
                 onPress={() => router.push({ pathname: "./Drink_DataInput" })}
             >
-                <Text style={styles.moduleTitle}>饮水量</Text>
+                <Text style={styles.moduleTitle}>Water Intake</Text>
                 <Text style={styles.moduleContent}>
-                    今日已饮水{drinkAmount}ml，已有 {getTimeSinceLastDrink()} 分钟未喝水
+                    Drank {drinkAmount}ml today, {getTimeSinceLastDrink()} minutes since last drink
                 </Text>
                 <View style={styles.barContainer}>
                     {Array.from({ length: 10 }).map((_, index) => (
@@ -184,18 +184,18 @@ export default function Health() {
                             ]}
                         />
                     ))}
-                    <Text style={styles.barLabelLeft}>该多喝水了</Text>
-                    <Text style={styles.barLabelRight}>优秀</Text>
+                    <Text style={styles.barLabelLeft}>Drink more</Text>
+                    <Text style={styles.barLabelRight}>Excellent</Text>
                 </View>
             </TouchableOpacity>
     
-            {/* 睡眠模块 */}
+            {/* Sleep Module */}
             <TouchableOpacity
                 style={styles.module}
                 onPress={() => router.push({ pathname: "./Sleep_DataInput" })}
             >
-                <Text style={styles.moduleTitle}>睡眠</Text>
-                <Text style={styles.moduleContent}>昨晚睡了 {sleepHours} 小时</Text>
+                <Text style={styles.moduleTitle}>Sleep</Text>
+                <Text style={styles.moduleContent}>Slept {sleepHours} hours last night</Text>
                 <View style={styles.barContainer}>
                     {Array.from({ length: 10 }).map((_, index) => (
                         <View
@@ -206,14 +206,14 @@ export default function Health() {
                             ]}
                         />
                     ))}
-                    <Text style={styles.barLabelLeft}>有待提高</Text>
-                    <Text style={styles.barLabelRight}>优秀</Text>
+                    <Text style={styles.barLabelLeft}>Needs improvement</Text>
+                    <Text style={styles.barLabelRight}>Excellent</Text>
                 </View>
             </TouchableOpacity>
     
-            {/* 健康评分 */}
+            {/* Health Score */}
             <View style={styles.module}>
-                <Text style={styles.moduleTitle}>健康评分</Text>
+                <Text style={styles.moduleTitle}>Health Score</Text>
                 <View style={styles.healthScoreContainer}>
                     <Svg width={200} height={200}>
                         <Circle cx={100} cy={100} r={90} stroke="#e0e0e0" strokeWidth={10} fill="none" />
@@ -236,12 +236,12 @@ export default function Health() {
                 </View>
             </View>
     
-            {/* 清空数据 */}
+            {/* Clear Today's Data */}
             <TouchableOpacity style={styles.clearButton} onPress={clearData}>
-                <Text style={styles.clearButtonText}>清空今日数据</Text>
+                <Text style={styles.clearButtonText}>Clear Today's Data</Text>
             </TouchableOpacity>
     
-            {/* 底部导航 */}
+            {/* Bottom Navigation */}
             {renderNavigation()}
         </ScrollView>
     );
@@ -349,3 +349,4 @@ const styles = StyleSheet.create({
         fontWeight: '500',
       },
 });
+//
