@@ -284,21 +284,6 @@ const Me = () => {
     });
   };
 
-  const uploadLocationsToServer = async () => {
-    try {
-      const response = await fetch('http://192.168.1.101:5000/submit_locations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locations: selectedLocations }),
-      });
-      const data = await response.json();
-      Alert.alert('提示', data.message);
-    } catch (error) {
-      console.error('上传失败:', error);
-      Alert.alert('提示', '同步失败');
-    }
-  };
-
   const deleteLocation = async (index: number) => {
     const updated = [...selectedLocations];
     updated.splice(index, 1);
@@ -434,6 +419,11 @@ const selectLocation = async (location: any) => {
     setSelectedLocations(updatedLocations);
     await AsyncStorage.setItem('selectedLocations', JSON.stringify(updatedLocations));
     Alert.alert('提示', '提醒地点保存成功');
+
+    // 新增逻辑：如果用户当前在提醒地点范围内，立即弹出一次提醒
+    if (currentCoords) {
+      checkAllLocationProximity(currentCoords.lat, currentCoords.lng);
+    }
   }
 };
 
@@ -550,11 +540,6 @@ const checkAllLocationProximity = (userLat: number, userLng: number) => {
           </View>
         ))}
       </View>
-
-      {/* 上传提醒地点到服务器 */}
-      <TouchableOpacity style={styles.button} onPress={uploadLocationsToServer}>
-        <Text style={styles.buttonText}>上传提醒地点到服务器</Text>
-      </TouchableOpacity>
 
       {/* 久坐提醒自定义语句 */}
       <View style={styles.section}>

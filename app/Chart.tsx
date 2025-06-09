@@ -119,8 +119,17 @@ const Chart = () => {
         })
       );
 
+      const labels = Array.from({ length: daysInMonth }, (_, i) => {
+        const day = i + 1;
+        if (day < 10) {
+          return `${day}`;
+        } else {
+          return `${String(day)[0]}\n${String(day)[1]}`;
+        }
+      });
+
       setStepsData({
-        labels: Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`),
+        labels: labels,
         datasets: [{ data: steps }]
       });
     } catch (error) {
