@@ -22,13 +22,13 @@ def submit_health_data():
     weight = data.get('weight')
 
     # Check if required data exists before saving
-    if sleep_time and drink_count:
+    if height is not None and weight is not None:
         new_data = HealthData(sleep_time=sleep_time, drink_count=drink_count, height=height, weight=weight)
         db.session.add(new_data)
         db.session.commit()
         return jsonify({'message': 'Data submitted successfully'}), 200
     else:
-        return jsonify({'message': 'Incomplete data'}), 400
+        return jsonify({'message': 'Height and weight are required'}), 400
 
 @app.route('/submit_locations', methods=['POST'])
 def submit_locations():

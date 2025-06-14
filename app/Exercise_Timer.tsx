@@ -75,21 +75,25 @@ export default function ExerciseTimer() {
     const duration = Math.floor(time / 60); // Convert to minutes
     const calories = calculateCalories(duration);
 
-    // Save exercise data
-    const today = new Date().toDateString();
-    const exerciseDataStr = await AsyncStorage.getItem(`exercise_${today}`);
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+
+    const exerciseDataStr = await AsyncStorage.getItem(`exercise_${todayKey}`);
     const exerciseData = exerciseDataStr ? JSON.parse(exerciseDataStr) : [];
     
-    exerciseData.push({
+    const newExerciseEntry = {
       type,
       duration,
       calories,
-      timestamp: Date.now() // Add timestamp
-    });
+      timestamp: Date.now()
+    };
+    exerciseData.push(newExerciseEntry);
 
-    await AsyncStorage.setItem(`exercise_${today}`, JSON.stringify(exerciseData));
+    console.log('Exercise_Timer: Saving new entry:', newExerciseEntry);
+    console.log('Exercise_Timer: All today\'s exercise data before saving:', exerciseData);
 
-    // Navigate back to previous screen
+    await AsyncStorage.setItem(`exercise_${todayKey}`, JSON.stringify(exerciseData));
+    
     router.back();
   };
 
